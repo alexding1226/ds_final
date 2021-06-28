@@ -1,7 +1,8 @@
 import time
 import datetime
+from tkinter import *
 
-
+root = Tk()
 
 class Task():
     def __init__(self,name,duration,importance,deadline,type = "study",successive = False) :
