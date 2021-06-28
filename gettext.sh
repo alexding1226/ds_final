@@ -1,0 +1,1 @@
+../Cellar/gettext/0.21/bin/gettext.sh
