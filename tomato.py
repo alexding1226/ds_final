@@ -47,9 +47,9 @@ class main(Tk):
         self.remaintime = self.duration
         self.counting = False
         self.switch_frame(StartPage,data)
-        Button(text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0)
-        Button(text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1)
-        Button(text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2)
+        Button(text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15)
+        Button(text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15)
+        Button(text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
         if self._frame is not None:
@@ -116,13 +116,16 @@ class AllTasksPage(Frame):
             task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
-        sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration"],state="readonly")
+        self.add_task_button = Button(self.frame_tasks,text="+",command=lambda:self.add_task(taskrow))
+        self.add_task_button.grid(row=taskrow,column=0)
+        sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration"],state="readonly",width=10)
         sort_combobox.current(0)
-        sort_combobox.grid(row=0,column=0)
+        sort_combobox.grid(row=0,column=1,padx = 10,pady=10)
+        Label(self.frame_config,text="sort by:").grid(row=0,column=0)
         rev = BooleanVar()
         check_reverse =  Checkbutton(self.frame_config,text="reverse",variable=rev,onvalue=True,offvalue=False)
-        check_reverse.grid(column = 1,row = 0)
-        Button(self.frame_config,text="confirm",command = lambda: self.sort(sort_combobox.get(),rev.get())).grid(column=2,row=0)
+        check_reverse.grid(column = 2,row = 0,padx=10,pady=10)
+        Button(self.frame_config,text="confirm",command = lambda: self.sort(sort_combobox.get(),rev.get())).grid(column=3,row=0,padx=10,pady=10)
 
 
     def sort(self,type,rev):
@@ -138,6 +141,34 @@ class AllTasksPage(Frame):
             task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
+        self.add_task_button = Button(self.frame_tasks,text="+",command=lambda:self.add_task(taskrow))
+        self.add_task_button.grid(row=taskrow,column=0)
+    def add_task(self,taskrow):
+        self.add_task_button.grid(row=taskrow+1,column=0)
+        self.add_task_button["command"] = lambda: self.add_task(taskrow+1)
+        frame_addtask = Frame(self.frame_tasks)
+        frame_addtask.grid(row=taskrow,column=0)
+        e_name = Entry(frame_addtask,width=5)
+        e_name.insert(0,"Name")
+        e_name.grid(column=0,row=0,padx=10)
+        scale_importance = Scale(frame_addtask,from_= 1 ,to=5,orient=HORIZONTAL,length=50,width=10)
+        scale_importance.grid(column=1,row=0)
+        e_duration = Entry(frame_addtask,width=8)
+        e_duration.insert(0,"duration")
+        e_duration.grid(column=2,row=0,padx=10)
+        confirm_button = Button(self.frame_tasks,text="confirm"
+                                ,command=lambda: self.add_confirm(taskrow,frame_addtask,e_name,scale_importance,e_duration))
+        confirm_button.grid(row=taskrow,column=1,padx=10)
+    def add_confirm(self,taskrow,frame,name,imp,dur):
+        task = Task(name.get(),int(dur.get()),imp.get(),5)
+        self.data.alltasks.add(task)
+        frame.destroy()
+        task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
+        task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
+        task_label.grid(row = taskrow,column = 0, pady=5)
+        task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
+        task_button.grid(row = taskrow,column = 1)
+
 class TaskChangeButton(Button):
     def __init__(self,frame,task,taskrow,task_label):
         super().__init__(frame)
@@ -155,26 +186,26 @@ class TaskChangeButton(Button):
         change_frame.grid(column=0,row = self.taskrow)
         e_name = Entry(change_frame,width=5)
         e_name.insert(0,self.task.name)
-        e_name.grid(column=0,row=0)
-        combo_importance = ttk.Combobox(change_frame,values=["*","**","***","****","*****"],state="readonly",width=5)
-        combo_importance.current(self.task.importance-1)
-        combo_importance.grid(row=0,column=1)
+        e_name.grid(column=0,row=0,rowspan=2)
+        scale_importance = Scale(change_frame,from_= 1 ,to=5,orient=HORIZONTAL,length=50)
+        scale_importance.set(self.task.importance)
+        scale_importance.grid(column=1,row=1)
         e_duration = Entry(change_frame,width=5)
         e_duration.insert(0,self.task.duration)
-        e_duration.grid(column=2,row=0)
-        Label(change_frame,text="hrs").grid(column=3,row=0)
+        e_duration.grid(column=2,row=0,rowspan=2)
+        Label(change_frame,text="hrs").grid(column=3,row=0,rowspan=2)
         self.name = e_name
-        self.importance = combo_importance
+        self.importance = scale_importance
         self.duration = e_duration
         self.frame = change_frame
     def confirm(self):
         self.task.name = self.name.get()
-        self.task.importance = len(self.importance.get())
-        self.task.duration = self.duration.get()
+        self.task.importance = self.importance.get()
+        self.task.duration = int(self.duration.get())
         self.frame.destroy()
-        task_label =Label(self.root, font=('Helvetica', 18, "bold"))
-        task_label["text"] = self.task.name + "  " + self.task.importance * "*" + "  "+str(self.task.duration) + "hrs"
-        task_label.grid(row = self.taskrow,column = 0, pady=5)
+        self.task_label =Label(self.root, font=('Helvetica', 18, "bold"))
+        self.task_label["text"] = self.task.name + "  " + self.task.importance * "*" + "  "+str(self.task.duration) + "hrs"
+        self.task_label.grid(row = self.taskrow,column = 0, pady=5)
         self["text"] = "change"
         self["command"] = self.change
 
