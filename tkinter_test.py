@@ -1,19 +1,46 @@
-from tkinter import *
+try:
+    import Tkinter as tk
+except:
+    import tkinter as tk
+    
+class SampleApp(tk.Tk):
+    def __init__(self):
+        tk.Tk.__init__(self)
+        self._frame = None
+        self.switch_frame(StartPage)
 
-root = Tk()
+    def switch_frame(self, frame_class):
+        new_frame = frame_class(self)
+        if self._frame is not None:
+            self._frame.destroy()
+        self._frame = new_frame
+        self._frame.pack()
 
-e = Entry(root,width=35, borderwidth=5)
-e.grid(row=0, column=0, columnspan=3, padx=10, pady=10)
+class StartPage(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        tk.Label(self, text="Start page", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
+        tk.Button(self, text="Go to page one",
+                  command=lambda: master.switch_frame(PageOne)).pack()
+        tk.Button(self, text="Go to page two",
+                  command=lambda: master.switch_frame(PageTwo)).pack()
 
-def button_click(number):
-    current = e.get()
-    #e.delete(0, END)
-    #e.insert(0, str(current) + str(number))
-    e.insert(END,number)
+class PageOne(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        tk.Frame.configure(self,bg='blue')
+        tk.Label(self, text="Page one", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
+        tk.Button(self, text="Go back to start page",
+                  command=lambda: master.switch_frame(StartPage)).pack()
 
-button_1 = Button(root, text="1", padx=40, pady=20, command=lambda: button_click(1))
-button_2 = Button(root, text="2", padx=40, pady=20, command=lambda: button_click(2))
+class PageTwo(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        tk.Frame.configure(self,bg='red')
+        tk.Label(self, text="Page two", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
+        tk.Button(self, text="Go back to start page",
+                  command=lambda: master.switch_frame(StartPage)).pack()
 
-button_1.grid(row=3, column=0)
-button_2.grid(row=3, column=1)
-root.mainloop()
+if __name__ == "__main__":
+    app = SampleApp()
+    app.mainloop()
