@@ -55,7 +55,7 @@ class main(Tk):
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
-        self._frame.grid(column = 1,row = 0,columnspan =5)
+        self._frame.grid(column = 1,row = 0,rowspan =5)
     def count_down(self):
         self.counting = True
         self.remaintime -= 1
@@ -108,25 +108,81 @@ class AllTasksPage(Frame):
         self.frame_config.grid(row=0,column=0)
         self.frame_tasks = Frame(self)
         self.frame_tasks.grid(row=1,column=0)
+        taskrow = 0
         for task in self.alltasks.tasks:
             task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
             task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
-            task_label.pack(side="top", fill="x", pady=5)
+            task_label.grid(row = taskrow,column = 0, pady=5)
+            task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
+            task_button.grid(row = taskrow,column = 1)
+            taskrow += 1
         sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration"],state="readonly")
         sort_combobox.current(0)
         sort_combobox.grid(row=0,column=0)
-        Button(self.frame_config,text="confirm",command = lambda: self.sort(sort_combobox.get())).grid(column=1,row=0)
+        rev = BooleanVar()
+        check_reverse =  Checkbutton(self.frame_config,text="reverse",variable=rev,onvalue=True,offvalue=False)
+        check_reverse.grid(column = 1,row = 0)
+        Button(self.frame_config,text="confirm",command = lambda: self.sort(sort_combobox.get(),rev.get())).grid(column=2,row=0)
 
 
-    def sort(self,type):
+    def sort(self,type,rev):
         self.frame_tasks.destroy()
         self.frame_tasks = Frame(self)
         self.frame_tasks.grid(row=1,column=0)
-        self.alltasks.tasks = data.alltasks.sort(type)
+        self.alltasks.tasks = data.alltasks.sort(type,not rev)
+        taskrow = 0
         for task in self.alltasks.tasks:
             task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
             task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
-            task_label.pack(side="top", fill="x", pady=5)
+            task_label.grid(row = taskrow,column = 0, pady=5)
+            task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
+            task_button.grid(row = taskrow,column = 1)
+            taskrow += 1
+class TaskChangeButton(Button):
+    def __init__(self,frame,task,taskrow,task_label):
+        super().__init__(frame)
+        self.root = frame
+        self.task = task
+        self.taskrow = taskrow
+        self.task_label = task_label
+        self["command"] = self.change
+        self["text"] = "change"
+    def change(self):
+        self["text"] = "confirm"
+        self["command"] = self.confirm
+        self.task_label.destroy()
+        change_frame = Frame(self.root)
+        change_frame.grid(column=0,row = self.taskrow)
+        e_name = Entry(change_frame,width=5)
+        e_name.insert(0,self.task.name)
+        e_name.grid(column=0,row=0)
+        combo_importance = ttk.Combobox(change_frame,values=["*","**","***","****","*****"],state="readonly",width=5)
+        combo_importance.current(self.task.importance-1)
+        combo_importance.grid(row=0,column=1)
+        e_duration = Entry(change_frame,width=5)
+        e_duration.insert(0,self.task.duration)
+        e_duration.grid(column=2,row=0)
+        Label(change_frame,text="hrs").grid(column=3,row=0)
+        self.name = e_name
+        self.importance = combo_importance
+        self.duration = e_duration
+        self.frame = change_frame
+    def confirm(self):
+        self.task.name = self.name.get()
+        self.task.importance = len(self.importance.get())
+        self.task.duration = self.duration.get()
+        self.frame.destroy()
+        task_label =Label(self.root, font=('Helvetica', 18, "bold"))
+        task_label["text"] = self.task.name + "  " + self.task.importance * "*" + "  "+str(self.task.duration) + "hrs"
+        task_label.grid(row = self.taskrow,column = 0, pady=5)
+        self["text"] = "change"
+        self["command"] = self.change
+
+
+
+
+
+
 
 t1 = Task("a",5,3,20)
 t2 = Task("b",2,2,29)
