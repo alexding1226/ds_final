@@ -1,3 +1,2 @@
-再撐一個禮拜...
-
-所以是這樣嗎，不知道對不對
+Meeting time：11:00, 20:30
+https://meet.google.com/qge-pwem-uun
