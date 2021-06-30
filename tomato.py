@@ -1,4 +1,5 @@
 from calendar import month
+from re import T
 import time
 import datetime
 from tkinter import *
@@ -13,7 +14,7 @@ class Task():
         self.type = type
         self.successive = successive
         self.date = date
-
+        self.whentodo = None #[month,day,period] #period = 1~48
 class AllTasks():
     def __init__(self,tasks) :
         self.tasks = tasks
@@ -35,6 +36,12 @@ class AllTasks():
         elif type == "deadline":
             self.tasks = sorted(self.tasks,key= lambda task:task.date,reverse = not (rev))
             return self.tasks
+    def algorithm(self):
+        self.nextsixdays = [[self.tasks[2]],[],[],[],[],[]]
+        self.today = [self.tasks[0],self.tasks[1]]
+        self.tasks[0].whentodo = [6,30,20]
+        self.tasks[1].whentodo = [6,30,30]
+
 class Data():
     def __init__(self) :
         self.clock_time = 25
@@ -51,15 +58,18 @@ class main(Tk):
         self.remaintime = self.duration
         self.counting = False
         self.switch_frame(StartPage,data)
-        Button(text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15)
-        Button(text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15)
-        Button(text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15)
+        change_frame = Frame(self)
+        change_frame.pack(side="left")
+        Button(change_frame,text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15)
+        Button(change_frame,text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15)
+        Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15)
+        Button(change_frame,text="today",command=lambda:self.switch_frame(TodayPage,data)).grid(column=0,row=3,pady=15,padx=15)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
-        self._frame.grid(column = 1,row = 0,rowspan =5)
+        self._frame.pack()
     def count_down(self):
         self.counting = True
         self.remaintime -= 1
@@ -360,7 +370,11 @@ class TaskChangeButton(Button):
         self["text"] = "change"
         self["command"] = self.change
 
-
+class TodayPage(Frame):
+    def __init__(self,master,data):
+        Frame.__init__(self, master)
+        self.data = data
+        self["width"] = 500
 
 
 
