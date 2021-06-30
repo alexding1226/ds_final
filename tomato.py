@@ -1,15 +1,18 @@
+from calendar import month
 import time
 import datetime
 from tkinter import *
 import tkinter.ttk as ttk
+from tkcalendar import Calendar
 class Task():
-    def __init__(self,name,duration,importance,deadline,type = "study",successive = False) :
+    def __init__(self,name,duration,importance,date,type = "study",successive = False) :
         self.name = name
         self.duration = duration
         self.importance = importance
-        self.deadline = deadline
+        #self.deadline = deadline
         self.type = type
         self.successive = successive
+        self.date = date
 
 class AllTasks():
     def __init__(self,tasks) :
@@ -23,14 +26,14 @@ class AllTasks():
         elif type == "importance":
             self.tasks = sorted(self.tasks,key= lambda task:task.importance,reverse = (rev))
             return self.tasks
-        elif type == "deadline":
-            self.tasks = sorted(self.tasks,key= lambda task:task.deadline,reverse = (rev))
-            return self.tasks
         elif type == "duration":
             self.tasks = sorted(self.tasks,key= lambda task:task.duration,reverse = (rev))
             return self.tasks
         elif type == "name":
             self.tasks = sorted(self.tasks,key= lambda task:task.name,reverse = not (rev))
+            return self.tasks
+        elif type == "date":
+            self.tasks = sorted(self.tasks,key= lambda task:task.date,reverse = not (rev))
             return self.tasks
 class Data():
     def __init__(self) :
@@ -42,7 +45,7 @@ class main(Tk):
     def __init__(self,data) :
         super().__init__()
         self._frame = None
-        self.geometry("500x500")
+        self.geometry("1000x700")
         self.duration = 50
         self.remaintime = self.duration
         self.counting = False
@@ -99,25 +102,84 @@ class Tomato(Frame):
         self.start_button["state"] = DISABLED
         self.master.count_down()
 
+#from https://stackoverflow.com/questions/16188420/tkinter-scrollbar-for-frame
+class VerticalScrolledFrame(Frame):
+    """A pure Tkinter scrollable frame that actually works!
+    * Use the 'interior' attribute to place widgets inside the scrollable frame
+    * Construct and pack/place/grid normally
+    * This frame only allows vertical scrolling
+
+    """
+    def __init__(self, parent, *args, **kw):
+        Frame.__init__(self, parent, *args, **kw)            
+
+        # create a canvas object and a vertical scrollbar for scrolling it
+        vscrollbar = Scrollbar(self, orient=VERTICAL)
+        vscrollbar.pack(fill=Y, side=RIGHT, expand=FALSE)
+        canvas = Canvas(self, bd=0, highlightthickness=0,height=425,
+                        yscrollcommand=vscrollbar.set)
+        canvas.pack(side=LEFT, fill=BOTH, expand=TRUE)
+        vscrollbar.config(command=canvas.yview)
+
+        # reset the view
+        canvas.xview_moveto(0)
+        canvas.yview_moveto(0)
+
+        # create a frame inside the canvas which will be scrolled with it
+        self.interior = interior = Frame(canvas)
+        self.interior["width"] = 1000
+        interior_id = canvas.create_window(0, 0, window=interior,
+                                           anchor=NW)
+
+        # track changes to the canvas and frame width and sync them,
+        # also updating the scrollbar
+        def _configure_interior(event):
+            # update the scrollbars to match the size of the inner frame
+            size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
+            canvas.config(scrollregion="0 0 %s %s" % size)
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the canvas's width to fit the inner frame
+                canvas.config(width=interior.winfo_reqwidth())
+        interior.bind('<Configure>', _configure_interior)
+
+        def _configure_canvas(event):
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the inner frame's width to fill the canvas
+                canvas.itemconfigure(interior_id, width=canvas.winfo_width())
+        canvas.bind('<Configure>', _configure_canvas)
+
+
 class AllTasksPage(Frame):
     def __init__(self,master,data):
         Frame.__init__(self, master)
         self.data = data
         self.alltasks = data.alltasks
         self.frame_config = Frame(self)
-        self.frame_config.grid(row=0,column=0)
-        self.frame_tasks = Frame(self)
-        self.frame_tasks.grid(row=1,column=0)
+        self.frame_config.grid(row=0,column=0,sticky=W)
+        self.frame_tasks = VerticalScrolledFrame(self)
+        self.frame_tasks["height"] = 500
+        self.frame_tasks["width"] = 1000
+        self.frame_tasks.grid_propagate(0)
+        self.frame_tasks.grid(row=1,column=0,rowspan=10)
         taskrow = 0
         for task in self.alltasks.tasks:
-            task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
-            task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
-            task_label.grid(row = taskrow,column = 0, pady=5)
-            task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
+            task_frame =Frame(self.frame_tasks.interior)
+            task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
+            name_label=Label(task_frame,text=task.name,width=20)
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l.grid_propagate(0)
+            imp_l.grid(row=0,column=1,padx=20,sticky=W)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+            du_l.grid(row=0,column=2,padx=20)
+            du_l.grid_propagate(0)
+            Label(task_frame,text="%d/%d"%(task.date[0],task.date[1])).grid(row=0,column=3,padx=20)
+            task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
-        self.add_task_button = Button(self.frame_tasks,text="+",command=lambda:self.add_task(taskrow))
-        self.add_task_button.grid(row=taskrow,column=0)
+        self.add_task_button = Button(self,text="+",command=self.add_task)
+        self.add_task_button.grid(row=30,column=0,pady=30)
         sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration"],state="readonly",width=10)
         sort_combobox.current(0)
         sort_combobox.grid(row=0,column=1,padx = 10,pady=10)
@@ -130,82 +192,121 @@ class AllTasksPage(Frame):
 
     def sort(self,type,rev):
         self.frame_tasks.destroy()
-        self.frame_tasks = Frame(self)
+        self.frame_tasks = VerticalScrolledFrame(self)
         self.frame_tasks.grid(row=1,column=0)
         self.alltasks.tasks = data.alltasks.sort(type,not rev)
         taskrow = 0
         for task in self.alltasks.tasks:
-            task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
-            task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
-            task_label.grid(row = taskrow,column = 0, pady=5)
-            task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
+            task_frame =Frame(self.frame_tasks.interior)
+            task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
+            name_label=Label(task_frame,text=task.name,width=20)
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l.grid_propagate(0)
+            imp_l.grid(row=0,column=1,padx=20,sticky=W)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+            du_l.grid(row=0,column=2,padx=20)
+            du_l.grid_propagate(0)
+            Label(task_frame,text="%d/%d"%(task.date[0],task.date[1])).grid(row=0,column=3,padx=20)
+            task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
-        self.add_task_button = Button(self.frame_tasks,text="+",command=lambda:self.add_task(taskrow))
-        self.add_task_button.grid(row=taskrow,column=0)
-    def add_task(self,taskrow):
-        self.add_task_button.grid(row=taskrow+1,column=0)
-        self.add_task_button["command"] = lambda: self.add_task(taskrow+1)
-        frame_addtask = Frame(self.frame_tasks)
-        frame_addtask.grid(row=taskrow,column=0)
-        e_name = Entry(frame_addtask,width=5)
+        self.add_task_button = Button(self,text="+",command=self.add_task)
+        self.add_task_button.grid(row=30,column=0,pady=30)
+    def add_task(self):
+        self.add_task_button.destroy()
+        frame_addtask = Frame(self)
+        frame_addtask.grid(row=30,column=0,pady=30)
+        e_name = Entry(frame_addtask,width=30)
         e_name.insert(0,"Name")
         e_name.grid(column=0,row=0,padx=10)
         scale_importance = Scale(frame_addtask,from_= 1 ,to=5,orient=HORIZONTAL,length=50,width=10)
         scale_importance.grid(column=1,row=0)
-        e_duration = Entry(frame_addtask,width=8)
-        e_duration.insert(0,"duration")
+        e_duration = Entry(frame_addtask,width=3)
+        e_duration.insert(0,1)
         e_duration.grid(column=2,row=0,padx=10)
-        confirm_button = Button(self.frame_tasks,text="confirm"
-                                ,command=lambda: self.add_confirm(taskrow,frame_addtask,e_name,scale_importance,e_duration))
-        confirm_button.grid(row=taskrow,column=1,padx=10)
-    def add_confirm(self,taskrow,frame,name,imp,dur):
-        task = Task(name.get(),int(dur.get()),imp.get(),5)
+        Label(frame_addtask,text="hrs").grid(row=0,column=3)
+        now = datetime.datetime.now()
+        cal = Calendar(frame_addtask,selectmode = "day",year = now.year,month = now.month,day = now.day)
+        cal.grid(row = 0,column = 4,padx = 10)
+        confirm_button = Button(self,text="confirm"
+                                ,command=lambda: self.add_confirm(frame_addtask,e_name,scale_importance,e_duration,cal))
+        confirm_button.grid(row=30,column=1,padx=1,pady=30)
+    def add_confirm(self,frame,name,imp,dur,cal):
+        ymd = cal.get_date().split("/")
+        task = Task(name.get(),int(dur.get()),imp.get(),[int(ymd[1]),int(ymd[2])])
         self.data.alltasks.add(task)
         frame.destroy()
-        task_label =Label(self.frame_tasks, font=('Helvetica', 18, "bold"))
-        task_label["text"] = task.name + "  " + task.importance * "*" + "  "+str(task.duration) + "hrs"
-        task_label.grid(row = taskrow,column = 0, pady=5)
-        task_button = TaskChangeButton(self.frame_tasks,task,taskrow,task_label)
-        task_button.grid(row = taskrow,column = 1)
+        self.add_task_button = Button(self,text="+",command=self.add_task)
+        self.add_task_button.grid(row=30,column=0,pady=30)
+        task_frame =Frame(self.frame_tasks.interior)
+        task_frame.grid(row = len(self.data.alltasks.tasks)-1,column = 0, pady=5,sticky=W)
+        name_label=Label(task_frame,text=task.name,width=20)
+        name_label.grid(row = 0,column=0,padx=20,sticky=W)
+        name_label.grid_propagate(0)
+        imp_l = Label(task_frame,text="*" * task.importance,width=5)
+        imp_l.grid_propagate(0)
+        imp_l.grid(row=0,column=1,padx=20,sticky=W)
+        du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+        du_l.grid(row=0,column=2,padx=20)
+        du_l.grid_propagate(0)
+        Label(task_frame,text="%d/%d"%(task.date[0],task.date[1])).grid(row=0,column=3,padx=20)
+        task_button = TaskChangeButton(self.frame_tasks.interior,task,len(self.data.alltasks.tasks)-1,task_frame)
+        task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
 
 class TaskChangeButton(Button):
-    def __init__(self,frame,task,taskrow,task_label):
+    def __init__(self,frame,task,taskrow,task_frame):
         super().__init__(frame)
         self.root = frame
         self.task = task
         self.taskrow = taskrow
-        self.task_label = task_label
+        self.task_frame = task_frame
         self["command"] = self.change
         self["text"] = "change"
     def change(self):
         self["text"] = "confirm"
         self["command"] = self.confirm
-        self.task_label.destroy()
+        self.task_frame.destroy()
         change_frame = Frame(self.root)
         change_frame.grid(column=0,row = self.taskrow)
-        e_name = Entry(change_frame,width=5)
+        e_name = Entry(change_frame,width=20)
         e_name.insert(0,self.task.name)
         e_name.grid(column=0,row=0,rowspan=2)
         scale_importance = Scale(change_frame,from_= 1 ,to=5,orient=HORIZONTAL,length=50)
         scale_importance.set(self.task.importance)
-        scale_importance.grid(column=1,row=1)
+        scale_importance.grid(column=1,row=0)
         e_duration = Entry(change_frame,width=5)
         e_duration.insert(0,self.task.duration)
         e_duration.grid(column=2,row=0,rowspan=2)
         Label(change_frame,text="hrs").grid(column=3,row=0,rowspan=2)
+        now = datetime.datetime.now()
+        cal = Calendar(change_frame,selectmode = "day",year = now.year,month = self.task.date[0],day = self.task.date[1])
+        cal.grid(column = 4,row = 0)
         self.name = e_name
         self.importance = scale_importance
         self.duration = e_duration
         self.frame = change_frame
+        self.cal = cal
     def confirm(self):
         self.task.name = self.name.get()
         self.task.importance = self.importance.get()
         self.task.duration = int(self.duration.get())
+        ymd = self.cal.get_date().split("/")
+        self.task.date = (int(ymd[1]),int(ymd[2]))
         self.frame.destroy()
-        self.task_label =Label(self.root, font=('Helvetica', 18, "bold"))
-        self.task_label["text"] = self.task.name + "  " + self.task.importance * "*" + "  "+str(self.task.duration) + "hrs"
-        self.task_label.grid(row = self.taskrow,column = 0, pady=5)
+        task_frame =Frame(self.root)
+        task_frame.grid(row = self.taskrow,column = 0, pady=5,sticky=W)
+        name_label=Label(task_frame,text=self.task.name,width=20)
+        name_label.grid(row = 0,column=0,padx=20,sticky=W)
+        name_label.grid_propagate(0)
+        imp_l = Label(task_frame,text="*" * self.task.importance,width=5)
+        imp_l.grid_propagate(0)
+        imp_l.grid(row=0,column=1,padx=20,sticky=W)
+        du_l = Label(task_frame,text=str(self.task.duration)+"hrs",width=5)
+        du_l.grid(row=0,column=2,padx=20)
+        du_l.grid_propagate(0)
+        Label(task_frame,text="%d/%d"%(self.task.date[0],self.task.date[1])).grid(row=0,column=3,padx=20)
         self["text"] = "change"
         self["command"] = self.change
 
@@ -215,9 +316,9 @@ class TaskChangeButton(Button):
 
 
 
-t1 = Task("a",5,3,20)
-t2 = Task("b",2,2,29)
-t3 = Task("c",3,4,29)
+t1 = Task("a",5,3,[7,20])
+t2 = Task("b",2,2,[8,30])
+t3 = Task("c",3,4,[7,21])
 all = AllTasks([t1,t2,t3])
 data = Data()
 data.alltasks = all
