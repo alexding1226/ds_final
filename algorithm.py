@@ -1,6 +1,7 @@
 import copy
 import heapq
 
+
 # from Alex's work
 class Task():
     def __init__(self, name, duration, importance,deadline,min_length = 1,
@@ -14,13 +15,12 @@ class Task():
         self.non_consecutive_type = non_consecutive_type # list of types that can't take place right after this task
 #
 
-discription = Task() # for testing
 
 class algo_task:
     def __init__(self,description): # the discription is an object of class Task
         self.name = discription.name
         self.duration = discription.duration
-        self.priority = CalculatePriority(discription.importance, discription.deadline)
+        self.priority = self.CalculatePriority(discription.importance, discription.deadline)
         self.type = discription.type
         self.min_length = discription.min_length
         self.non_consecutive_type = discription.non_consecutive_type
@@ -46,4 +46,17 @@ class algo_task_scheduling:
             self.time.heappush(i)
         # need modification, to avoid affect the original data
 
-    
+
+
+# Pseudo version: 
+# total time insufficient warning should take plasce @ task adding section
+# that deals with the case that the sum of time of the first n task exceed the sum of time 
+# ... add up to the deadline of the n'th task
+
+# so maybe I shoud try not split the task if possible
+# the config. of split or not split 
+# 先拆大的，窮舉？
+
+
+if __name__ == "__main__":# for testing
+    discription = Task() 
