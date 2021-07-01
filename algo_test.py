@@ -3,18 +3,19 @@ import heapq as hp
 
 ## data structure dependent : 
 
-# deadline date, deadline time, importance, duration, name, type, min_length
-task_list = [(2,24,1,3,"B","exercise",1),(3,24,2,3,"C","academy",1),(1,24,1,3,"A","academy",1)]
+# deadline date, deadline time, importance, duration, name, type, min_length, non_consecutive
+task_list = [[2,24,1,3,"B","exercise",1,["academy"]],[3,24,2,3,"C","academy",1,[]],[1,24,1,3,"A","academy",1,[]], [3,24,1,1,"D","Exercise",1,[]]]
 # date, begin time, endd time
 period_list = [(1,9,14),(2,13,16),(3,12,15)]
-hp.heapify(task_list)
-hp.heapify(period_list)
 
 def Peek(heap):
     return heap[0]
 
-def RemoveMin(heap):
+def h_RemoveMin(heap):
     hp.heappop(heap)
+
+def l_RemoveMin(list):
+    list.pop(0)
 
 def p_GetDate(period_item):
     return period_item[0]
@@ -28,14 +29,31 @@ def p_GetEnd(period_item):
 def t_GetDate(task_item):
     return task_item[0]
 
+def t_GetTime(task_item):
+    return task_item[1]
+
 def t_GetDuration(task_item):
     return task_item[3]
 
 def t_GetName(task_item):
     return task_item[4]
 
+def t_GetType(task_item):
+    return task_item[5]
+
 def t_GetMinLength(task_item):
     return task_item[6]
+
+def t_GetNonConsecutive(task_item):
+    return task_item[7]
+
+def Swap(list):
+    if len(list)>1:
+        temp = list[0]
+        list[0] = list[1]
+        list[1] = temp
+        return True
+    return False
 
 ## Algorithm, abstractized : 
 # 試著處理 min_length, not done yet
@@ -68,47 +86,130 @@ def Detect():
         
     print("the amount of tasks is okay")
     return 0
-    
 
+class schedule_1:
+    def __init__(self):
+        self.task_list = task_list
+        self.period_list = period_list
 
-def Schedule():
-    schedule = [[]] # name, begin time, end time ### separated by date
-    # deadline date, deadline time, importance, duration, name, type, min_length
-    current_time = p_GetBegin(Peek(period_list))
-    current_progress = 0
-    current_date = p_GetDate(Peek(period_list))
-    while len(task_list) != 0:
-        p_duration = p_GetEnd(Peek(period_list)) - current_time
-        t_duration = t_GetDuration(Peek(task_list)) - current_progress
+    def Schedule(self):
+        hp.heapify(self.task_list)
+        hp.heapify(self.period_list)
+        schedule = [[]] # name, begin time, end time ### separated by date
+        # deadline date, deadline time, importance, duration, name, type, min_length
+        current_time = p_GetBegin(Peek(self.period_list))
+        current_progress = 0
+        current_date = p_GetDate(Peek(self.period_list))
+        while len(self.task_list) != 0:
+            p_duration = p_GetEnd(Peek(self.period_list)) - current_time
+            t_duration = t_GetDuration(Peek(self.task_list)) - current_progress
     
-        if p_duration == 0:
-            RemoveMin(period_list)
-            current_time = p_GetBegin(Peek(period_list))
-            p_duration = p_GetEnd(Peek(period_list)) - current_time
+            if p_duration == 0:
+                RemoveMin(self.period_list)
+                current_time = p_GetBegin(Peek(self.period_list))
+                p_duration = p_GetEnd(Peek(self.period_list)) - current_time
         
-        if t_duration == 0:
-            RemoveMin(task_list)
-            current_progress = 0
-            t_duration = t_GetDuration(Peek(task_list))
+            if t_duration == 0:
+                RemoveMin(self.task_list)
+                current_progress = 0
+                t_duration = t_GetDuration(Peek(self.task_list))
 
-        if period_list[0][0] != current_date:
-            schedule.append([]) 
-            current_date = current_date +1
+            if p_GetDate(Peek(self.period_list)) != current_date:
+                schedule.append([]) 
+                current_date = current_date +1
 
-        if p_duration >= t_duration: 
-            schedule[current_date-1].append((t_GetName(Peek(task_list)), current_time, current_time + t_duration))
-            current_time = current_time + t_duration
-            current_progress = 0
-            RemoveMin(task_list)
-    
-        else: # modified here
-            # if p_duration >= t_GetMinLength() # don't care about whether the "tail" exceeds min_length
-            schedule[current_date-1].append((t_GetName(Peek(task_list)), current_time, current_time + p_duration))
-            current_progress = current_progress + p_duration
-            RemoveMin(period_list)
-            current_time = p_GetBegin(Peek(period_list))
-    return schedule
+            if p_duration >= t_duration: 
+                schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + t_duration))
+                current_time = current_time + t_duration
+                current_progress = 0
+                RemoveMin(self.task_list)
+        
+            else: # modified here
+                # if p_duration >= t_GetMinLength() # don't care about whether the "tail" exceeds min_length
+                schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + p_duration))
+                current_progress = current_progress + p_duration
+                RemoveMin(self.period_list)
+                current_time = p_GetBegin(Peek(self.period_list))
+        return schedule
+
+def t_is_split(task_item):
+    if len(task_item) >7:
+        return True
+    return False
+
+class schedule_2:
+    def __init__(self):
+        self.task_list = task_list
+        self.period_list = period_list
+
+    def CheckExpire(self,task_deadline_date, task_deadline_time, current_date, current_time):
+        if current_date < task_deadline_date:
+            return False
+        elif current_date == task_deadline_date:
+            if current_time <= task_deadline_time:
+                return False
+        return True
+
+    def Schedule(self):
+        hp.heapify(self.task_list)
+        self.period_list.sort()
+
+        schedule = [[]] # name, begin time, end time ### separated by date
+        # deadline date, deadline time, importance, duration, name, type, min_length
+        current_time = p_GetBegin(Peek(self.period_list))
+        current_progress = 0
+        current_date = p_GetDate(Peek(self.period_list))
+        current_non_consecutive = [] # new
+        while len(self.task_list) != 0:
+            p_duration = p_GetEnd(Peek(self.period_list)) - current_time
+            t_duration = t_GetDuration(Peek(self.task_list)) - current_progress
+
+            if p_duration == 0:
+                l_RemoveMin(self.period_list)
+                current_time = p_GetBegin(Peek(self.period_list))
+                p_duration = p_GetEnd(Peek(self.period_list)) - current_time
+        
+            if t_duration == 0:
+                h_RemoveMin(self.task_list)
+                current_progress = 0
+                t_duration = t_GetDuration(Peek(self.task_list))
+
+            if p_GetDate(Peek(self.period_list)) != current_date:
+                schedule.append([]) 
+                current_date = current_date +1
+
+            if t_GetType(Peek(self.task_list)) in current_non_consecutive:
+                if Swap(self.task_list):
+                    t_duration = t_GetDuration(Peek(self.task_list))
+                else:
+                    print("can't skip this, no other task left")
+                    current_non_consecutive = []
+
+
+            if p_duration >= t_duration: 
+                schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + t_duration))
+                current_time = current_time + t_duration
+                if self.CheckExpire(t_GetDate(Peek(self.task_list)), t_GetTime(Peek(self.task_list)), current_date, current_time):
+                    print("task",t_GetName(Peek(self.task_list)),"expires at day", current_date)
+                    #break
+                current_progress = 0
+                current_non_consecutive = t_GetNonConsecutive(Peek(task_list))
+                h_RemoveMin(self.task_list)
+        
+            else: # modified here
+                # if p_duration >= t_GetMinLength() # don't care about whether the "tail" exceeds min_length
+                schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + p_duration))
+                current_progress = current_progress + p_duration
+                current_non_consecutive = t_GetNonConsecutive(Peek(task_list))
+                current_time = current_time + p_duration
+                if self.CheckExpire(t_GetDate(Peek(self.task_list)), t_GetTime(Peek(self.task_list)), current_date, current_time):
+                    print("task",t_GetName(Peek(self.task_list)),"expires at day", current_date)
+                    #break
+                l_RemoveMin(self.period_list)
+                current_time = p_GetBegin(Peek(self.period_list))
+        return schedule
 
 if __name__ == "__main__": # testing
-    #print(Schedule())
-    print(Detect())
+    S = schedule_2()
+    print(S.Schedule())
+    #print(Detect())
