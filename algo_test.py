@@ -105,12 +105,12 @@ class schedule_1:
             t_duration = t_GetDuration(Peek(self.task_list)) - current_progress
     
             if p_duration == 0:
-                RemoveMin(self.period_list)
+                h_RemoveMin(self.period_list)
                 current_time = p_GetBegin(Peek(self.period_list))
                 p_duration = p_GetEnd(Peek(self.period_list)) - current_time
         
             if t_duration == 0:
-                RemoveMin(self.task_list)
+                h_RemoveMin(self.task_list)
                 current_progress = 0
                 t_duration = t_GetDuration(Peek(self.task_list))
 
@@ -122,13 +122,13 @@ class schedule_1:
                 schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + t_duration))
                 current_time = current_time + t_duration
                 current_progress = 0
-                RemoveMin(self.task_list)
+                h_RemoveMin(self.task_list)
         
             else: # modified here
                 # if p_duration >= t_GetMinLength() # don't care about whether the "tail" exceeds min_length
                 schedule[current_date-1].append((t_GetName(Peek(self.task_list)), current_time, current_time + p_duration))
                 current_progress = current_progress + p_duration
-                RemoveMin(self.period_list)
+                h_RemoveMin(self.period_list)
                 current_time = p_GetBegin(Peek(self.period_list))
         return schedule
 
