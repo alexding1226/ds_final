@@ -48,9 +48,10 @@ class AllTasks():
         task_in_all = list(filter(lambda x: (x.name  == task.name and x.importance == task.importance and x.type == task.type), self.tasks))
         if task_in_all[0].duration == task.duration:
             self.delete(task_in_all[0])
-            self.data.finishtasks.add(self.task)
-            self.task.finished = True
+            self.data.finishtasks.add(task)
+            task.finished = True
         else:
+            task.finished = True
             task_in_all[0].duration -= task.duration
 
 
