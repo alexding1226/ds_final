@@ -1,7 +1,5 @@
 from tkinter import *
 import tkinter
-#import notify2 as notification
-#from playsound import playsound
 
 class Application(Frame):
     def __init__(self,master):
@@ -9,6 +7,7 @@ class Application(Frame):
         self.pack(anchor=CENTER,expand=1,fill=BOTH)
         self.createWidgets()
         self.timer = None
+        self.conti = 0
         self._paused = False
 
 
@@ -21,26 +20,26 @@ class Application(Frame):
         self.firstButtonFrame = Frame(self)
 
         self.time = Scale(self.firstButtonFrame, label='Time-period', from_=25, to=55, orient=HORIZONTAL, length=200, showvalue=0,tickinterval=2, resolution=1)
-        self.time.pack(side=LEFT,padx='0')
+        self.time.grid(row=1, column=0)
         self.b1=Button(self.firstButtonFrame,text='Set',command=self.set1)
-        self.b1.pack(side=LEFT,padx='0')
-        #self.timerToStart = self.timerVariable.get()
+        self.b1.grid(row=1, column=1)
+    
         
-        self.firstButtonFrame.pack(side=TOP)
+        self.firstButtonFrame.grid(row=0, column=0)
         
         self.timerLabel = Label(self,text="00:00",font=("Cantrell",70),bg="white")
-        self.timerLabel.pack(side=TOP,pady="5")
+        self.timerLabel.grid(row=2, column=0)
 
         self.secondButtonFrame = Frame(self,bg="white")
-        self.startButton = Button(self.secondButtonFrame,text="Start",fg="RED",bg="#5da423",activebackground="green",activeforeground="white",width="8",height="2",font=('Arial',11),command=self.startTime)
-        self.startButton.pack(side=LEFT,padx='5')
+        self.startButton = Button(self.secondButtonFrame,text="Start",fg="RED",activebackground="green",activeforeground="white",width="8",height="2",font=('Arial',11),command=self.startTime)
+        self.startButton.grid(row=3, column=1)
 
-        self.stopButton = Button(self.secondButtonFrame,text="Stop",fg="yellow",bg="red",width="8",height="2",activebackground="#c60f13",activeforeground="white",font=('Arial',11),command=self.stopTime)
-        self.stopButton.pack(side=LEFT,padx='5')
+        self.stopButton = Button(self.secondButtonFrame,text="Stop",fg="yellow",bg="red",width="8",height="2",activebackground=,activeforeground="white",font=('Arial',11),command=self.stopTime)
+        self.stopButton.grid(row=3, column=2)
 
         self.resetButton = Button(self.secondButtonFrame,text="Reset",fg="black",width="8",height="2",font=('Arial',11),command=self.resetTime)
-        self.resetButton.pack(side=LEFT,padx='5')
-        self.secondButtonFrame.pack(side=TOP,pady="5")
+        self.resetButton.grid(row=3, column=3)
+        self.secondButtonFrame.grid(row=3, column=0)
 
     
     def set1(self):
@@ -52,23 +51,26 @@ class Application(Frame):
             self.master.after_cancel(self.timer)
         self._paused = False
         self.countdown(timerToStart * 60)
-      
+
 
     def startTime(self):
         self._paused = False
         if self.timer is None:
-            self.countdown(self.timerToStart)
+            self.countdown(self.timerToStart*60)
 
     def stopTime(self):
         if self.timer is not None:
             self._paused = True
-
-    # I have to work on the reset method more cos it's not working as I expect
+            
     def resetTime(self):
         self.master.after_cancel(self.timer)
         self.timer = None
         self._paused = False
-        self.countdown(self.timerToStart)
+        if self.conti%2 == 0:
+            self.timerToStart = self.time.get()
+        else:
+            self.timerToStart = int(0.1*(self.time.get()))
+        self.countdown(self.timerToStart*60)
         self._paused = True
 
     def countdown(self,timeInSeconds, start=True):
@@ -84,9 +86,9 @@ class Application(Frame):
                 app.timerLabel.configure(text=timeformat)
                 self.timer = self.master.after(1000,self.countdown,timeInSeconds-1,False)
         else:
+            self.conti += 1
             self.resetTime()
             self.startTime()
-            #self.startTime()
 
 if __name__ == '__main__':
     root = Tk()
