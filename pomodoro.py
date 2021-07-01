@@ -53,13 +53,13 @@ class Application(Frame):
         if self.timer is not None:
             self.master.after_cancel(self.timer)
         self._paused = False
-        self.countdown(self.timerToStart)
+        self.countdown(self.timerToStart*60)
 
 
     def startTime(self):
         self._paused = False
         if self.timer is None:
-            self.countdown(self.timerToStart)
+            self.countdown(self.timerToStart*60)
 
     def stopTime(self):
         if self.timer is not None:
@@ -77,7 +77,7 @@ class Application(Frame):
             self.type.config(text="Break")
             self.type.grid(row=0, column=0)
             self.timerToStart = int(0.1*(self.time.get()))
-        self.countdown(self.timerToStart)
+        self.countdown(self.timerToStart * 60)
         self._paused = True
 
     def countdown(self,timeInSeconds, start=True):
