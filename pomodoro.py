@@ -9,6 +9,7 @@ class Application(Frame):
         self.timer = None
         self.conti = 0
         self._paused = False
+        self.timerToStart = 25
         
 
 
@@ -52,7 +53,7 @@ class Application(Frame):
         if self.timer is not None:
             self.master.after_cancel(self.timer)
         self._paused = False
-        self.countdown(timerToStart)
+        self.countdown(self.timerToStart)
 
 
     def startTime(self):
