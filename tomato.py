@@ -39,14 +39,17 @@ class AllTasks():
     def algorithm(self):
         self.nextsixdays = [[self.tasks[2]],[],[],[],[],[]]
         self.today = [self.tasks[0],self.tasks[1]]
-        self.tasks[0].whentodo = [6,30,20]
-        self.tasks[1].whentodo = [6,30,30]
+        self.tasks[0].whentodo = [7,1,0]
+        self.tasks[1].whentodo = [7,1,21.5]
 
 class Data():
     def __init__(self) :
         self.clock_time = 25
         self.alltasks = AllTasks([])
         self.types = ["study","exercise","homework"]
+        #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
+        self.today = None
+        self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":"purple","homework":"green"}
 
 
 class main(Tk):
@@ -57,19 +60,19 @@ class main(Tk):
         self.duration = 50
         self.remaintime = self.duration
         self.counting = False
-        self.switch_frame(StartPage,data)
         change_frame = Frame(self)
-        change_frame.pack(side="left")
-        Button(change_frame,text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15)
-        Button(change_frame,text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15)
-        Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15)
-        Button(change_frame,text="today",command=lambda:self.switch_frame(TodayPage,data)).grid(column=0,row=3,pady=15,padx=15)
+        change_frame.pack(side="left",fill="y")
+        Button(change_frame,text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15,sticky=N)
+        Button(change_frame,text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15,sticky=N)
+        Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15,sticky=N)
+        Button(change_frame,text="today",command=lambda:self.switch_frame(TodayPage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
+        self.switch_frame(StartPage,data)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
-        self._frame.pack()
+        self._frame.pack(side = "left",fill = "both")
     def count_down(self):
         self.counting = True
         self.remaintime -= 1
@@ -121,13 +124,13 @@ class VerticalScrolledFrame(Frame):
     * This frame only allows vertical scrolling
 
     """
-    def __init__(self, parent, *args, **kw):
+    def __init__(self, parent,height, *args, **kw):
         Frame.__init__(self, parent, *args, **kw)            
 
         # create a canvas object and a vertical scrollbar for scrolling it
         vscrollbar = Scrollbar(self, orient=VERTICAL)
         vscrollbar.pack(fill=Y, side=RIGHT, expand=FALSE)
-        canvas = Canvas(self, bd=0, highlightthickness=0,height=425,
+        canvas = Canvas(self, bd=0, highlightthickness=0,height=height,
                         yscrollcommand=vscrollbar.set)
         canvas.pack(side=LEFT, fill=BOTH, expand=TRUE)
         vscrollbar.config(command=canvas.yview)
@@ -167,7 +170,7 @@ class AllTasksPage(Frame):
         self.alltasks = data.alltasks
         self.frame_config = Frame(self)
         self.frame_config.grid(row=0,column=0,sticky=W)
-        self.frame_tasks = VerticalScrolledFrame(self)
+        self.frame_tasks = VerticalScrolledFrame(self,425)
         self.frame_tasks["height"] = 500
         self.frame_tasks["width"] = 1000
         self.frame_tasks.grid_propagate(0)
@@ -212,9 +215,9 @@ class AllTasksPage(Frame):
 
     def sort(self,type,rev):
         self.frame_tasks.destroy()
-        self.frame_tasks = VerticalScrolledFrame(self)
+        self.frame_tasks = VerticalScrolledFrame(self,425)
         self.frame_tasks.grid(row=1,column=0,pady=15)
-        self.alltasks.tasks = data.alltasks.sort(type,not rev)
+        self.alltasks.tasks = self.data.alltasks.sort(type,not rev)
         taskrow = 0
         for task in self.alltasks.tasks:
             task_frame =Frame(self.frame_tasks.interior)
@@ -348,7 +351,7 @@ class TaskChangeButton(Button):
         if self.task.type not in self.data.types:
             self.data.types.append(self.task.type)
         ymd = self.cal.get_date().split("/")
-        self.task.date = (int(ymd[1]),int(ymd[2]))
+        self.task.date = [int(ymd[1]),int(ymd[2])]
         self.frame.destroy()
         task_frame =Frame(self.root)
         task_frame.grid(row = self.taskrow,column = 0, pady=5,sticky=W)
@@ -370,22 +373,188 @@ class TaskChangeButton(Button):
         self["text"] = "change"
         self["command"] = self.change
 
-class TodayPage(Frame):
+class TodayPage(VerticalScrolledFrame):
     def __init__(self,master,data):
-        Frame.__init__(self, master)
+        VerticalScrolledFrame.__init__(self, master,700)
         self.data = data
-        self["width"] = 500
+        self.tasks = sorted(data.today,key= lambda task:task.whentodo)
+        now = datetime.datetime.now()
+        self.now = now
+        self.now_hm = [now.hour,now.minute]
+        self.after(1000*60*10,self.updatenow)
+        endtime = self.tasks[0].whentodo[2]
+        for task in self.tasks:
+            if task.whentodo[2] != endtime:
+                rest_time = task.whentodo[2] - endtime
+                rest_frame = RestFrame(self.interior,data,rest_time,endtime)
+                rest_frame.pack()
+            task_frame = TaskFrame(self.interior,data,task)
+            task_frame.pack()
+            endtime = task.whentodo[2] + task.duration
+        Button(self.interior,text="test update",command=self.updatenow).pack()
+    def updatenow(self) :
+        self.now += datetime.timedelta(hours=1)
+        now = self.now
+        self.now_hm = [now.hour,now.minute]
+        if self.now_hm[0]>12:
+            Label(self.interior,text="test").pack()
+        self.after(1000*60*10,self.updatenow)
+class TaskFrame(Frame):
+    def __init__(self,master,data,task):
+        Frame.__init__(self,master)
+        self.data = data
+        self.task = task
+        if task.whentodo[2]%1 == 0.5:
+            starttime_min = 3
+        else:
+            starttime_min = 0
+        starttime_hour = task.whentodo[2]//1
+        now =  datetime.datetime.now()
+        now_hour = now.hour
+        now_minute = now.minute
+        if now_hour < starttime_hour:
+            done = False
+            doing = False
+        elif now_hour == starttime_hour:
+            if now_minute <30:
+                if starttime_min == 3:
+                    done = False
+                    doing = False
+                else:
+                    done = False
+                    doing = True
+            else:
+                if starttime_min == 3:
+                    done = False
+                    doing = True
+                else:
+                    if task.duration == 0.5:
+                        done = True
+                        doing = False
+                    else:
+                        done = False
+                        doing = True
+        else: #now_hour > starttime_hour
+            endtime = task.whentodo[2]+task.duration
+            endtime_hour = endtime//1
+            if endtime%1 == 0.5:
+                endtime_min = 30
+            else:
+                endtime_min = 0
+            if now_hour < endtime_hour:
+                done = False
+                doing = True
+            elif now_hour == endtime_hour:
+                if now_minute < endtime_min:
+                    done = False
+                    doing = True
+                else:
+                    done = True
+                    doing = False
+            else:
+                done = True
+                doing = False
+        if done:
+            color = data.typecolor[task.type][1]
+        else:
+            color = data.typecolor[task.type][0]
+        starttime = "%d:%d0"%(starttime_hour,starttime_min)
+        time_frame = Frame(self)
+        time_frame.grid(row=0,column=0,sticky=N)
+        Label(time_frame,text=starttime).pack(side="top")
+        task_canvas = Canvas(self,bg = color,width=400,height=task.duration*50)
+        task_canvas.grid(row=0,column =1)
+        label_task = Label(task_canvas,text=task.name,bg=color,font=('Helvetica', 22, "bold"))
+        label_task.place(anchor="c",relx = .5,rely = .5)
+        if doing:
+            passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
+            y = passtime * 50
+            task_canvas.create_line(50,y,400,y)
+            now_label = Label(task_canvas,text="now",bg = color)
+            now_label.place(x=10,y=y-10,in_=task_canvas)
+class RestFrame(Frame):
+    def __init__(self,master,data,duration,starttime):
+        Frame.__init__(self,master)
+        self.data = data
+        self.duration = duration 
+        if starttime %1 == 0.5:
+            starttime_min = 3
+        else:
+            starttime_min = 0
+        starttime_hour = starttime // 1
+        now =  datetime.datetime.now()
+        now_hour = now.hour
+        now_minute = now.minute
+        if now_hour < starttime_hour:
+            done = False
+            doing = False
+        elif now_hour == starttime_hour:
+            if now_minute <30:
+                if starttime_min == 3:
+                    done = False
+                    doing = False
+                else:
+                    done = False
+                    doing = True
+            else:
+                if starttime_min == 3:
+                    done = False
+                    doing = True
+                else:
+                    if duration == 0.5:
+                        done = True
+                        doing = False
+                    else:
+                        done = False
+                        doing = True
+        else: #now_hour > starttime_hour
+            endtime = starttime+duration
+            endtime_hour = endtime//1
+            if endtime%1 == 0.5:
+                endtime_min = 30
+            else:
+                endtime_min = 0
+            if now_hour < endtime_hour:
+                done = False
+                doing = True
+            elif now_hour == endtime_hour:
+                if now_minute < endtime_min:
+                    done = False
+                    doing = True
+                else:
+                    done = True
+                    doing = False
+            else:
+                done = True
+                doing = False
+        starttime = "%d:%d0"%(starttime_hour,starttime_min)
+        time_frame = Frame(self)
+        time_frame.grid(row=0,column=0,sticky=N)
+        Label(time_frame,text=starttime).pack(side="top")
+        task_canvas = Canvas(self,width=400,height=duration*50)
+        task_canvas.grid(row=0,column =1)
+        rest_label = Label(task_canvas,text="Rest",font=('Helvetica', 22, "bold"))
+        rest_label.place(anchor="c",in_=task_canvas,relx=.5,rely = .5)
+        if doing:
+            passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
+            y = passtime * 50
+            task_canvas.create_line(50,y,400,y)
+            now_label = Label(task_canvas,text="now")
+            now_label.place(x=10,y=y,in_=task_canvas)
 
 
 
 
 
-t1 = Task("a",5,3,[7,20])
+
+t1 = Task("a",4,3,[7,20])
 t2 = Task("b",2,2,[8,30])
 t3 = Task("c",3,4,[7,21])
 all = AllTasks([t1,t2,t3])
 data = Data()
 data.alltasks = all
+data.alltasks.algorithm()
+data.today = [data.alltasks.tasks[0],data.alltasks.tasks[1]]
 
 app = main(data)
 app.mainloop()
