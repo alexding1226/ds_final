@@ -9,23 +9,25 @@ class Application(Frame):
         self.timer = None
         self.conti = 0
         self._paused = False
-
+        
 
 
     def createWidgets(self):
-
+        self.text = tk.StringVar()
+        self.text.set("Test")
         self.timerVariable = StringVar()
         self.timerVariable.set(None)
-    
+        self.type = Label(self, textvariable=self.text, bg='white', font=('Arial', 24))
+        self.type.grid(row=0, column=0)
         self.firstButtonFrame = Frame(self)
-
+        
         self.time = Scale(self.firstButtonFrame, label='Time-period', from_=25, to=55, orient=HORIZONTAL, length=200, showvalue=0,tickinterval=2, resolution=1)
         self.time.grid(row=1, column=0)
         self.b1=Button(self.firstButtonFrame,text='Set',command=self.set1)
         self.b1.grid(row=1, column=1)
-    
         
-        self.firstButtonFrame.grid(row=0, column=0)
+        
+        self.firstButtonFrame.grid(row=1, column=0)
         
         self.timerLabel = Label(self,text="00:00",font=("Cantrell",70),bg="white")
         self.timerLabel.grid(row=2, column=0)
@@ -34,7 +36,7 @@ class Application(Frame):
         self.startButton = Button(self.secondButtonFrame,text="Start",fg="RED",activebackground="green",activeforeground="white",width="8",height="2",font=('Arial',11),command=self.startTime)
         self.startButton.grid(row=3, column=1)
 
-        self.stopButton = Button(self.secondButtonFrame,text="Stop",fg="yellow",bg="red",width="8",height="2",activebackground=,activeforeground="white",font=('Arial',11),command=self.stopTime)
+        self.stopButton = Button(self.secondButtonFrame,text="Stop",fg="yellow",bg="red",width="8",height="2",activebackground="pink",activeforeground="white",font=('Arial',11),command=self.stopTime)
         self.stopButton.grid(row=3, column=2)
 
         self.resetButton = Button(self.secondButtonFrame,text="Reset",fg="black",width="8",height="2",font=('Arial',11),command=self.resetTime)
@@ -67,8 +69,10 @@ class Application(Frame):
         self.timer = None
         self._paused = False
         if self.conti%2 == 0:
+            self.text.set("Break")
             self.timerToStart = self.time.get()
         else:
+            self.text.set("Work")
             self.timerToStart = int(0.1*(self.time.get()))
         self.countdown(self.timerToStart*60)
         self._paused = True
