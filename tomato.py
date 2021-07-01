@@ -15,6 +15,7 @@ class Task():
         self.successive = successive
         self.date = date
         self.whentodo = None #[month,day,period] #period = 1~48
+        self.finished = False
 class AllTasks():
     def __init__(self,tasks) :
         self.tasks = tasks
@@ -40,7 +41,9 @@ class AllTasks():
         self.nextsixdays = [[self.tasks[2]],[],[],[],[],[]]
         self.today = [self.tasks[0],self.tasks[1]]
         self.tasks[0].whentodo = [7,1,0]
-        self.tasks[1].whentodo = [7,1,21.5]
+        self.tasks[1].whentodo = [7,1,21]
+    def delete(self,task):
+        self.tasks.remove(task)
 
 class Data():
     def __init__(self) :
@@ -50,6 +53,7 @@ class Data():
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
         self.today = None
         self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":"purple","homework":"green"}
+        self.finishtasks = AllTasks([])
 
 
 class main(Tk):
@@ -197,6 +201,34 @@ class AllTasksPage(Frame):
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
+        if len(self.data.finishtasks.tasks)>0:
+            self.finished_frame = Frame(self.frame_tasks.interior)
+            self.finished_frame.grid(row=taskrow,column=0)
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = 0,column = 0, pady=30,sticky=W)
+            name_label=Label(task_frame,text="finished tasks:")
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+        finished_row = 1
+        for task in self.data.finishtasks.tasks:
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+            name_label=Label(task_frame,text=task.name,width=20)
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l.grid_propagate(0)
+            imp_l.grid(row=0,column=1,padx=20,sticky=W)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+            du_l.grid(row=0,column=2,padx=20)
+            du_l.grid_propagate(0)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l.grid_propagate(0)
+            date_l.grid(row=0,column=3,padx=20,sticky=W)
+            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l.grid(row=0,column=4,padx = 30,sticky=E)
+            type_l.grid_propagate(0)
+            finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
         self.add_task_button.grid(row=30,column=0,pady=30)
         sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration","deadline","type"],state="readonly",width=10)
@@ -240,6 +272,34 @@ class AllTasksPage(Frame):
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
             taskrow += 1
+        if len(self.data.finishtasks.tasks)>0:
+            self.finished_frame = Frame(self.frame_tasks.interior)
+            self.finished_frame.grid(row=taskrow,column=0)
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = 0,column = 0, pady=30,sticky=W)
+            name_label=Label(task_frame,text="finished tasks:")
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+        finished_row = 1
+        for task in self.data.finishtasks.tasks:
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+            name_label=Label(task_frame,text=task.name,width=20)
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l.grid_propagate(0)
+            imp_l.grid(row=0,column=1,padx=20,sticky=W)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+            du_l.grid(row=0,column=2,padx=20)
+            du_l.grid_propagate(0)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l.grid_propagate(0)
+            date_l.grid(row=0,column=3,padx=20,sticky=W)
+            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l.grid(row=0,column=4,padx = 30,sticky=E)
+            type_l.grid_propagate(0)
+            finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
         self.add_task_button.grid(row=30,column=0,pady=30)
         Label(self,text="Name").place(x=68,y=40)
@@ -301,6 +361,36 @@ class AllTasksPage(Frame):
         date_l.grid(row=0,column=3,padx=20,sticky=W)
         task_button = TaskChangeButton(self.frame_tasks.interior,task,len(self.data.alltasks.tasks)-1,task_frame,self.data)
         task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
+        taskrow = len(self.data.alltasks.tasks)
+        self.finished_frame.destroy()
+        if len(self.data.finishtasks.tasks)>0:
+            self.finished_frame = Frame(self.frame_tasks.interior)
+            self.finished_frame.grid(row=taskrow,column=0)
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = 0,column = 0, pady=30,sticky=W)
+            name_label=Label(task_frame,text="finished tasks:")
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+        finished_row = 1
+        for task in self.data.finishtasks.tasks:
+            task_frame =Frame(self.finished_frame)
+            task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+            name_label=Label(task_frame,text=task.name,width=20)
+            name_label.grid(row = 0,column=0,padx=20,sticky=W)
+            name_label.grid_propagate(0)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l.grid_propagate(0)
+            imp_l.grid(row=0,column=1,padx=20,sticky=W)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=5)
+            du_l.grid(row=0,column=2,padx=20)
+            du_l.grid_propagate(0)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l.grid_propagate(0)
+            date_l.grid(row=0,column=3,padx=20,sticky=W)
+            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l.grid(row=0,column=4,padx = 30,sticky=E)
+            type_l.grid_propagate(0)
+            finished_row += 1
 
 class TaskChangeButton(Button):
     def __init__(self,frame,task,taskrow,task_frame,data):
@@ -377,11 +467,11 @@ class TodayPage(VerticalScrolledFrame):
     def __init__(self,master,data):
         VerticalScrolledFrame.__init__(self, master,700)
         self.data = data
+        self.master = master
         self.tasks = sorted(data.today,key= lambda task:task.whentodo)
         now = datetime.datetime.now()
         self.now = now
         self.now_hm = [now.hour,now.minute]
-        self.after(1000*60*10,self.updatenow)
         endtime = self.tasks[0].whentodo[2]
         for task in self.tasks:
             if task.whentodo[2] != endtime:
@@ -391,18 +481,12 @@ class TodayPage(VerticalScrolledFrame):
             task_frame = TaskFrame(self.interior,data,task)
             task_frame.pack()
             endtime = task.whentodo[2] + task.duration
-        Button(self.interior,text="test update",command=self.updatenow).pack()
-    def updatenow(self) :
-        self.now += datetime.timedelta(hours=1)
-        now = self.now
-        self.now_hm = [now.hour,now.minute]
-        if self.now_hm[0]>12:
-            Label(self.interior,text="test").pack()
-        self.after(1000*60*10,self.updatenow)
 class TaskFrame(Frame):
     def __init__(self,master,data,task):
         Frame.__init__(self,master)
         self.data = data
+        self.master = master
+        len_hour = 50
         self.task = task
         if task.whentodo[2]%1 == 0.5:
             starttime_min = 3
@@ -462,20 +546,35 @@ class TaskFrame(Frame):
         time_frame = Frame(self)
         time_frame.grid(row=0,column=0,sticky=N)
         Label(time_frame,text=starttime).pack(side="top")
-        task_canvas = Canvas(self,bg = color,width=400,height=task.duration*50)
+        task_canvas = Canvas(self,bg = color,width=300,height=task.duration*len_hour)
         task_canvas.grid(row=0,column =1)
-        label_task = Label(task_canvas,text=task.name,bg=color,font=('Helvetica', 22, "bold"))
+        label_task = Label(task_canvas,text=task.name,bg=color,font=('Helvetica', 22, "bold"),width=20,height=20)
         label_task.place(anchor="c",relx = .5,rely = .5)
         if doing:
             passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
-            y = passtime * 50
+            y = passtime * len_hour
             task_canvas.create_line(50,y,400,y)
             now_label = Label(task_canvas,text="now",bg = color)
             now_label.place(x=10,y=y-10,in_=task_canvas)
+        self.var = IntVar
+        check_done = Checkbutton(self,text="finished",command=self.finished,variable=self.var)
+        check_done.grid(row=0,column=2)
+        if self.task.finished :
+            check_done.select()
+            check_done.config(state=DISABLED)
+        else:
+            check_done.deselect()
+        self.check_done = check_done
+    def finished(self):
+        self.check_done.config(state=DISABLED)
+        self.data.finishtasks.add(self.task)
+        self.data.alltasks.delete(self.task)
+        self.task.finished = True
 class RestFrame(Frame):
     def __init__(self,master,data,duration,starttime):
         Frame.__init__(self,master)
         self.data = data
+        len_hour = 50
         self.duration = duration 
         if starttime %1 == 0.5:
             starttime_min = 3
@@ -529,27 +628,30 @@ class RestFrame(Frame):
                 doing = False
         starttime = "%d:%d0"%(starttime_hour,starttime_min)
         time_frame = Frame(self)
-        time_frame.grid(row=0,column=0,sticky=N)
+        time_frame.grid(row=0,column=0,sticky=N+W)
         Label(time_frame,text=starttime).pack(side="top")
-        task_canvas = Canvas(self,width=400,height=duration*50)
-        task_canvas.grid(row=0,column =1)
-        rest_label = Label(task_canvas,text="Rest",font=('Helvetica', 22, "bold"))
+        task_canvas = Canvas(self,width=300,height=duration*len_hour)
+        task_canvas.grid(row=0,column =1,sticky=W)
+        rest_label = Label(task_canvas,text="Rest",font=('Helvetica', 22, "bold"),width=20)
         rest_label.place(anchor="c",in_=task_canvas,relx=.5,rely = .5)
         if doing:
             passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
-            y = passtime * 50
+            y = passtime * len_hour
             task_canvas.create_line(50,y,400,y)
             now_label = Label(task_canvas,text="now")
             now_label.place(x=10,y=y,in_=task_canvas)
+        pad_frame = Frame(self,width=71,highlightbackground="black",highlightthickness=5)
+        pad_frame.grid(row = 0,column=2)
+        
 
 
 
 
 
 
-t1 = Task("a",4,3,[7,20])
+t1 = Task("a",0.5,3,[7,20])
 t2 = Task("b",2,2,[8,30])
-t3 = Task("c",3,4,[7,21])
+t3 = Task("c",2,2,[7,21])
 all = AllTasks([t1,t2,t3])
 data = Data()
 data.alltasks = all
