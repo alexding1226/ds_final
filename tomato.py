@@ -39,19 +39,29 @@ class AllTasks():
             return self.tasks
     def algorithm(self):
         self.nextsixdays = [[self.tasks[2]],[],[],[],[],[]]
-        self.today = [self.tasks[0],self.tasks[1]]
-        self.tasks[0].whentodo = [7,1,0]
-        self.tasks[1].whentodo = [7,1,21]
+        self.today = [Task("a",0.5,3,[7,20]),Task("b",2,2,[8,30])]
+        self.today[0].whentodo = [7,1,0]
+        self.today[1].whentodo = [7,1,21]
     def delete(self,task):
         self.tasks.remove(task)
+    def finished(self,task):
+        task_in_all = list(filter(lambda x: (x.name  == task.name and x.importance == task.importance and x.type == task.type), self.tasks))
+        if task_in_all[0].duration == task.duration:
+            self.delete(task_in_all[0])
+            self.data.finishtasks.add(self.task)
+            self.task.finished = True
+        else:
+            task_in_all[0].duration -= task.duration
+
 
 class Data():
-    def __init__(self) :
+    def __init__(self,all) :
         self.clock_time = 25
-        self.alltasks = AllTasks([])
+        self.alltasks = all
+        self.alltasks.algorithm()
         self.types = ["study","exercise","homework"]
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
-        self.today = None
+        self.today = self.alltasks.today
         self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":"purple","homework":"green"}
         self.finishtasks = AllTasks([])
 
@@ -567,9 +577,7 @@ class TaskFrame(Frame):
         self.check_done = check_done
     def finished(self):
         self.check_done.config(state=DISABLED)
-        self.data.finishtasks.add(self.task)
-        self.data.alltasks.delete(self.task)
-        self.task.finished = True
+        self.data.alltasks.finished(self.task)
 class RestFrame(Frame):
     def __init__(self,master,data,duration,starttime):
         Frame.__init__(self,master)
@@ -649,14 +657,12 @@ class RestFrame(Frame):
 
 
 
-t1 = Task("a",0.5,3,[7,20])
+t1 = Task("a",2.5,3,[7,20])
 t2 = Task("b",2,2,[8,30])
 t3 = Task("c",2,2,[7,21])
 all = AllTasks([t1,t2,t3])
-data = Data()
-data.alltasks = all
-data.alltasks.algorithm()
-data.today = [data.alltasks.tasks[0],data.alltasks.tasks[1]]
+data = Data(all)
+
 
 app = main(data)
 app.mainloop()
