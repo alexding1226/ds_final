@@ -1,7 +1,7 @@
 import copy
 import heapq
 
-
+'''
 # from Alex's work
 class Task():
     def __init__(self, name, duration, importance,deadline,min_length = 1,
@@ -45,7 +45,7 @@ class algo_task_scheduling:
         for i in items:
             self.time.heappush(i)
         # need modification, to avoid affect the original data
-
+'''
 
 
 # Pseudo version: 
@@ -56,7 +56,3 @@ class algo_task_scheduling:
 # so maybe I shoud try not split the task if possible
 # the config. of split or not split 
 # 先拆大的，窮舉？
-
-
-if __name__ == "__main__":# for testing
-    discription = Task() 
