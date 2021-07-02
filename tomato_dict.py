@@ -102,7 +102,7 @@ class main(Tk):
     def __init__(self,data) :
         super().__init__()
         self._frame = None
-        self.geometry("1000x700")
+        self.geometry("1050x700")
         self.duration = 50
         self.remaintime = self.duration
         self.counting = False
@@ -200,6 +200,7 @@ class AllTasksPage(Frame):
     def __init__(self,master,data):
         Frame.__init__(self, master)
         self.data = data
+        self.master = master
         self.alltasks = data.alltasks
         self.frame_config = Frame(self)
         self.frame_config.grid(row=0,column=0,sticky=W)
@@ -238,7 +239,7 @@ class AllTasksPage(Frame):
             task_button.grid(row = taskrow,column = 1)
             finished_button = FinishButton(task_frame,task,self.data,self,master)
             finished_button.grid(row=0,column=5)
-            delete_button = Button(task_frame,text="delete",command=lambda: self.delete_notfinish(task))
+            delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
             delete_button.grid(row =0,column=6,padx=10)
             taskrow += 1
         self.finished_frame = Frame()
@@ -270,7 +271,7 @@ class AllTasksPage(Frame):
             type_l = Label(task_frame,text=task.type,width = 10)
             type_l.grid(row=0,column=4,padx = 30,sticky=W)
             type_l.grid_propagate(0)
-            delete_button = Button(task_frame,text="delete",command=self.delete_finish)
+            delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
             delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
@@ -288,16 +289,19 @@ class AllTasksPage(Frame):
         Label(self,text="time").place(x=300,y=40)
         Label(self,text="deadline").place(x=430,y=40)
         Label(self,text="type").place(x=605,y=40)
-    def delete_finish(self,task):
-        pass
-    def delete_notfinish(self,task):
-        pass
     def sort(self,type,rev):
         self.frame_tasks.destroy()
         self.frame_tasks = VerticalScrolledFrame(self,425)
         self.frame_tasks.grid(row=1,column=0,pady=15)
         tasks = self.data.alltasks.sort(type,not rev)
         taskrow = 0
+        if len(self.alltasks.tasks) == 0:
+            no_task_frame = Frame(self.frame_tasks.interior,width=800,height=25)
+            no_task_frame.grid(row=0,column=0,pady=5,sticky=W)
+            no_task_frame.grid_propagate(0)
+            no_task_label = Label(no_task_frame,text="there is no unfinished task, add one below")
+            no_task_label.place(anchor="c",relx=.5,rely=.5)
+            taskrow = 1
         for task in tasks:
             task = task[1]
             task_frame =Frame(self.frame_tasks.interior)
@@ -319,7 +323,12 @@ class AllTasksPage(Frame):
             type_l.grid_propagate(0)
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
+            finished_button = FinishButton(task_frame,task,self.data,self,self.master)
+            finished_button.grid(row=0,column=5)
+            delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
+            delete_button.grid(row =0,column=6,padx=10)
             taskrow += 1
+        self.finished_frame = Frame()
         if len(self.data.finishtasks.tasks)>0:
             self.finished_frame = Frame(self.frame_tasks.interior)
             self.finished_frame.grid(row=taskrow,column=0)
@@ -329,24 +338,27 @@ class AllTasksPage(Frame):
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
         finished_row = 1
-        for task in self.data.finishtasks.tasks:
-            task_frame =Frame(self.finished_frame)
+        for task in self.data.finishtasks.sort(type,not rev):
+            task_frame =Frame(self.finished_frame,width=800,height=25)
             task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+            task_frame.grid_propagate(0)
             name_label=Label(task_frame,text=task.name,width=20)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
             imp_l = Label(task_frame,text="*" * task.importance,width=5)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
             date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
             type_l = Label(task_frame,text=task.type,width = 10)
-            type_l.grid(row=0,column=4,padx = 30,sticky=E)
+            type_l.grid(row=0,column=4,padx = 30,sticky=W)
             type_l.grid_propagate(0)
+            delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
+            delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
         self.add_task_button.grid(row=30,column=0,pady=30)
@@ -410,6 +422,10 @@ class AllTasksPage(Frame):
             date_l.grid(row=0,column=3,padx=20,sticky=W)
             task_button = TaskChangeButton(self.frame_tasks.interior,task,len(self.data.alltasks.tasks)-1,task_frame,self.data)
             task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
+            finished_button = FinishButton(task_frame,task,self.data,self,self.master)
+            finished_button.grid(row=0,column=5)
+            delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
+            delete_button.grid(row =0,column=6,padx=10)
             taskrow = len(self.data.alltasks.tasks)
             self.finished_frame.destroy()
             if len(self.data.finishtasks.tasks)>0:
@@ -439,6 +455,8 @@ class AllTasksPage(Frame):
                 type_l = Label(task_frame,text=task.type,width = 10)
                 type_l.grid(row=0,column=4,padx = 30,sticky=E)
                 type_l.grid_propagate(0)
+                delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
+                delete_button.grid(row =0,column=5,padx=10)
                 finished_row += 1
         else:
             name = name.get()
@@ -462,6 +480,29 @@ class FinishButton(Button):
     def finish(self):
         self.data.finished(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
+class Delete_notfinishButton(Button):
+    def __init__(self,frame,task,data,grandmaster):
+        super().__init__(frame)
+        self.task = task
+        self.data = data
+        self["text"] = "delete"
+        self["command"] = self.delete
+        self.grandmaster = grandmaster
+    def delete(self):
+        self.data.alltasks.delete(self.task)
+        self.grandmaster.switch_frame(AllTasksPage,self.data)
+class Delete_finishButton(Button):
+    def __init__(self,frame,task,data,grandmaster):
+        super().__init__(frame)
+        self.task = task
+        self.data = data
+        self["text"] = "delete"
+        self["command"] = self.delete
+        self.grandmaster = grandmaster
+    def delete(self):
+        self.data.finishtasks.delete(self.task)
+        self.grandmaster.switch_frame(AllTasksPage,self.data)
+
 class TaskChangeButton(Button):
     def __init__(self,frame,task,taskrow,task_frame,data):
         super().__init__(frame)
@@ -537,6 +578,10 @@ class TaskChangeButton(Button):
         type_l = Label(task_frame,text=self.task.type,width = 10)
         type_l.grid(row=0,column=4,padx = 30,sticky=E)
         type_l.grid_propagate(0)
+        finished_button = FinishButton(task_frame,self.task,self.data,self,self.master.master.master.master.master)
+        finished_button.grid(row=0,column=5)
+        delete_button = Delete_notfinishButton(task_frame,self.task,self.data,self.master.master.master.master.master)
+        delete_button.grid(row =0,column=6,padx=10)
         self["text"] = "change"
         self["command"] = self.change
 class TodayPage(VerticalScrolledFrame):
@@ -643,7 +688,7 @@ class TaskFrame(Frame):
         self.check_done = check_done
     def finished(self):
         self.check_done.config(state=DISABLED)
-        self.data.alltasks.finished(self.task)
+        self.data.finished(self.task)
 class RestFrame(Frame):
     def __init__(self,master,data,duration,starttime):
         Frame.__init__(self,master)
