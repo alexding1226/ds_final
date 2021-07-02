@@ -5,6 +5,7 @@ import datetime
 from tkinter import *
 import tkinter.ttk as ttk
 from tkcalendar import Calendar
+from tkinter import messagebox
 class Task():
     def __init__(self,name,duration,importance,date,type = "study",successive = False) :
         self.name = name
@@ -19,8 +20,36 @@ class Task():
         self.time_finished = 0
 class AllTasks():
     def __init__(self,tasks) :
+        self.tasks = dict()
+        for task in tasks:
+            self.tasks[task.name] = task
+    def add(self,task):
+        self.tasks[task.name] = task
+    def sort(self ,type, rev = True):
+        if type == "type":
+            a = sorted(self.tasks.items(),key = lambda task:task[1].type ,reverse = not (rev))
+            return a
+        elif type == "importance":
+            a = sorted(self.tasks.items(),key = lambda task:task[1].importance ,reverse = (rev))
+            return a
+        elif type == "duration":
+            a = sorted(self.tasks.items(),key = lambda task:task[1].duration ,reverse =  (rev))
+            return a
+        elif type == "name":
+            a = sorted(self.tasks.items(),key = lambda task:task[1].name ,reverse = not (rev))
+            return a
+        elif type == "deadline":
+            a = sorted(self.tasks.items(),key = lambda task:task[1].date ,reverse = not (rev))
+            return a
+    def algorithm(self):
+        self.today = [Task("a",0.5,3,[7,20]),Task("b",2,2,[8,30])]
+        self.today[0].whentodo = [7,1,0]
+        self.today[1].whentodo = [7,1,21]
+    def delete(self,task):
+        del self.tasks[task.name]
+class FinishedTasks():
+    def __init__(self,tasks) :
         self.tasks = tasks
-        self.data = None
     def add(self,task):
         self.tasks.append(task)
     def sort(self ,type, rev = True):
@@ -39,27 +68,11 @@ class AllTasks():
         elif type == "deadline":
             self.tasks = sorted(self.tasks,key= lambda task:task.date,reverse = not (rev))
             return self.tasks
-    def algorithm(self):
-        self.nextsixdays = [[self.tasks[2]],[],[],[],[],[]]
-        self.today = [Task("a",0.5,3,[7,20]),Task("b",2,2,[8,30])]
-        self.today[0].whentodo = [7,1,0]
-        self.today[1].whentodo = [7,1,21]
     def delete(self,task):
         self.tasks.remove(task)
-    def finished(self,task):
-        task_in_all = list(filter(lambda x: (x.name  == task.name and x.importance == task.importance and x.type == task.type), self.tasks))
-        if task_in_all[0].duration == task.duration:
-            self.delete(task_in_all[0])
-            self.data.finishtasks.add(task)
-            task.finished = True
-
-        else:
-            task.finished = True
-            task_in_all[0].time_finished += task.duration
-
 
 class Data():
-    def __init__(self,all) :
+    def __init__(self,all,finished) :
         self.clock_time = 25
         self.alltasks = all
         self.alltasks.algorithm()
@@ -67,9 +80,24 @@ class Data():
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
         self.today = self.alltasks.today
         self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":"purple","homework":"green"}
-        self.finishtasks = AllTasks([])
+        self.finishtasks =finished
         self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
         self.schedule[1][0].whentodo = [7,2,10]
+    def finished_part(self,task):
+        task_in_all = self.alltasks.tasks[task.name]
+        if task_in_all.duration == task.duration or task_in_all.time_finished + task.duration == task_in_all.duration:
+            self.alltasks.delete(task_in_all)
+            self.finishtasks.add(task)
+            task.finished = True
+        else:
+            task.finished = False
+            task_in_all.time_finished += task.duration
+    def finished(self,task):
+        task_in_all = self.alltasks.tasks[task.name]
+        self.alltasks.delete(task_in_all)
+        self.finishtasks.add(task)
+        task.finished = True
+
 class main(Tk):
     def __init__(self,data) :
         super().__init__()
@@ -181,7 +209,14 @@ class AllTasksPage(Frame):
         self.frame_tasks.grid_propagate(0)
         self.frame_tasks.grid(row=1,column=0,rowspan=10,pady = 15)
         taskrow = 0
-        for task in self.alltasks.tasks:
+        if len(self.alltasks.tasks) == 0:
+            no_task_frame = Frame(self.frame_tasks.interior,width=800,height=25)
+            no_task_frame.grid(row=0,column=0,pady=5,sticky=W)
+            no_task_frame.grid_propagate(0)
+            no_task_label = Label(no_task_frame,text="there is no unfinished task, add one below")
+            no_task_label.place(anchor="c",relx=.5,rely=.5)
+            taskrow = 1
+        for task in self.alltasks.tasks.values():
             task_frame =Frame(self.frame_tasks.interior)
             task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
             name_label=Label(task_frame,text=task.name,width=20)
@@ -201,7 +236,12 @@ class AllTasksPage(Frame):
             type_l.grid_propagate(0)
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
+            finished_button = FinishButton(task_frame,task,self.data,self,master)
+            finished_button.grid(row=0,column=5)
+            delete_button = Button(task_frame,text="delete",command=lambda: self.delete_notfinish(task))
+            delete_button.grid(row =0,column=6,padx=10)
             taskrow += 1
+        self.finished_frame = Frame()
         if len(self.data.finishtasks.tasks)>0:
             self.finished_frame = Frame(self.frame_tasks.interior)
             self.finished_frame.grid(row=taskrow,column=0)
@@ -212,23 +252,26 @@ class AllTasksPage(Frame):
             name_label.grid_propagate(0)
         finished_row = 1
         for task in self.data.finishtasks.tasks:
-            task_frame =Frame(self.finished_frame)
+            task_frame =Frame(self.finished_frame,width=800,height=25)
             task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+            task_frame.grid_propagate(0)
             name_label=Label(task_frame,text=task.name,width=20)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
             imp_l = Label(task_frame,text="*" * task.importance,width=5)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
             date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
             type_l = Label(task_frame,text=task.type,width = 10)
-            type_l.grid(row=0,column=4,padx = 30,sticky=E)
+            type_l.grid(row=0,column=4,padx = 30,sticky=W)
             type_l.grid_propagate(0)
+            delete_button = Button(task_frame,text="delete",command=self.delete_finish)
+            delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
         self.add_task_button.grid(row=30,column=0,pady=30)
@@ -245,13 +288,18 @@ class AllTasksPage(Frame):
         Label(self,text="time").place(x=300,y=40)
         Label(self,text="deadline").place(x=430,y=40)
         Label(self,text="type").place(x=605,y=40)
+    def delete_finish(self,task):
+        pass
+    def delete_notfinish(self,task):
+        pass
     def sort(self,type,rev):
         self.frame_tasks.destroy()
         self.frame_tasks = VerticalScrolledFrame(self,425)
         self.frame_tasks.grid(row=1,column=0,pady=15)
-        self.alltasks.tasks = self.data.alltasks.sort(type,not rev)
+        tasks = self.data.alltasks.sort(type,not rev)
         taskrow = 0
-        for task in self.alltasks.tasks:
+        for task in tasks:
+            task = task[1]
             task_frame =Frame(self.frame_tasks.interior)
             task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
             name_label=Label(task_frame,text=task.name,width=20)
@@ -304,9 +352,9 @@ class AllTasksPage(Frame):
         self.add_task_button.grid(row=30,column=0,pady=30)
         Label(self,text="Name").place(x=68,y=40)
         Label(self,text="importance").place(x=170,y=40)
-        Label(self,text="duration").place(x=280,y=40)
-        Label(self,text="deadline").place(x=410,y=40)
-        Label(self,text="type").place(x=585,y=40)
+        Label(self,text="time").place(x=300,y=40)
+        Label(self,text="deadline").place(x=430,y=40)
+        Label(self,text="type").place(x=605,y=40)
     def add_task(self):
         self.add_task_button.destroy()
         frame_addtask = Frame(self)
@@ -334,47 +382,17 @@ class AllTasksPage(Frame):
         self.confirm_button = confirm_button
     def add_confirm(self,frame,name,imp,dur,cal,type):
         ymd = cal.get_date().split("/")
-        task = Task(name.get(),int(dur.get())/2,imp.get(),[int(ymd[1]),int(ymd[2])],type.get())
-        self.data.alltasks.add(task)
-        if type.get() not in self.data.types:
-            self.data.types.append(type.get())
-        frame.destroy()
-        self.confirm_button.destroy()
-        self.add_task_button = Button(self,text="+",command=self.add_task)
-        self.add_task_button.grid(row=30,column=0,pady=30)
-        task_frame =Frame(self.frame_tasks.interior)
-        task_frame.grid(row = len(self.data.alltasks.tasks)-1,column = 0, pady=5,sticky=W)
-        name_label=Label(task_frame,text=task.name,width=20)
-        name_label.grid(row = 0,column=0,padx=20,sticky=W)
-        name_label.grid_propagate(0)
-        imp_l = Label(task_frame,text="*" * task.importance,width=5)
-        imp_l.grid_propagate(0)
-        imp_l.grid(row=0,column=1,padx=20,sticky=W)
-        du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
-        du_l.grid(row=0,column=2,padx=20)
-        du_l.grid_propagate(0)
-        type_l = Label(task_frame,text=task.type,width = 10)
-        type_l.grid(row=0,column=4,padx = 30,sticky=E)
-        type_l.grid_propagate(0)
-        date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
-        date_l.grid_propagate(0)
-        date_l.grid(row=0,column=3,padx=20,sticky=W)
-        task_button = TaskChangeButton(self.frame_tasks.interior,task,len(self.data.alltasks.tasks)-1,task_frame,self.data)
-        task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
-        taskrow = len(self.data.alltasks.tasks)
-        self.finished_frame.destroy()
-        if len(self.data.finishtasks.tasks)>0:
-            self.finished_frame = Frame(self.frame_tasks.interior)
-            self.finished_frame.grid(row=taskrow,column=0)
-            task_frame =Frame(self.finished_frame)
-            task_frame.grid(row = 0,column = 0, pady=30,sticky=W)
-            name_label=Label(task_frame,text="finished tasks:")
-            name_label.grid(row = 0,column=0,padx=20,sticky=W)
-            name_label.grid_propagate(0)
-        finished_row = 1
-        for task in self.data.finishtasks.tasks:
-            task_frame =Frame(self.finished_frame)
-            task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+        if name.get() not in self.data.alltasks.tasks:
+            task = Task(name.get(),int(dur.get())/2,imp.get(),[int(ymd[1]),int(ymd[2])],type.get())
+            self.data.alltasks.add(task)
+            if type.get() not in self.data.types:
+                self.data.types.append(type.get())
+            frame.destroy()
+            self.confirm_button.destroy()
+            self.add_task_button = Button(self,text="+",command=self.add_task)
+            self.add_task_button.grid(row=30,column=0,pady=30)
+            task_frame =Frame(self.frame_tasks.interior)
+            task_frame.grid(row = len(self.data.alltasks.tasks)-1,column = 0, pady=5,sticky=W)
             name_label=Label(task_frame,text=task.name,width=20)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
@@ -384,13 +402,66 @@ class AllTasksPage(Frame):
             du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
-            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
-            date_l.grid_propagate(0)
-            date_l.grid(row=0,column=3,padx=20,sticky=W)
             type_l = Label(task_frame,text=task.type,width = 10)
             type_l.grid(row=0,column=4,padx = 30,sticky=E)
             type_l.grid_propagate(0)
-            finished_row += 1
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l.grid_propagate(0)
+            date_l.grid(row=0,column=3,padx=20,sticky=W)
+            task_button = TaskChangeButton(self.frame_tasks.interior,task,len(self.data.alltasks.tasks)-1,task_frame,self.data)
+            task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
+            taskrow = len(self.data.alltasks.tasks)
+            self.finished_frame.destroy()
+            if len(self.data.finishtasks.tasks)>0:
+                self.finished_frame = Frame(self.frame_tasks.interior)
+                self.finished_frame.grid(row=taskrow,column=0,sticky=W)
+                task_frame =Frame(self.finished_frame)
+                task_frame.grid(row = 0,column = 0, pady=30,sticky=W)
+                name_label=Label(task_frame,text="finished tasks:")
+                name_label.grid(row = 0,column=0,padx=20,sticky=W)
+                name_label.grid_propagate(0)
+            finished_row = 1
+            for task in self.data.finishtasks.tasks:
+                task_frame =Frame(self.finished_frame)
+                task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
+                name_label=Label(task_frame,text=task.name,width=20)
+                name_label.grid(row = 0,column=0,padx=20,sticky=W)
+                name_label.grid_propagate(0)
+                imp_l = Label(task_frame,text="*" * task.importance,width=5)
+                imp_l.grid_propagate(0)
+                imp_l.grid(row=0,column=1,padx=20,sticky=W)
+                du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+                du_l.grid(row=0,column=2,padx=20)
+                du_l.grid_propagate(0)
+                date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+                date_l.grid_propagate(0)
+                date_l.grid(row=0,column=3,padx=20,sticky=W)
+                type_l = Label(task_frame,text=task.type,width = 10)
+                type_l.grid(row=0,column=4,padx = 30,sticky=E)
+                type_l.grid_propagate(0)
+                finished_row += 1
+        else:
+            name = name.get()
+            frame.destroy()
+            self.confirm_button.destroy()
+            self.add_task_button = Button(self,text="+",command=self.add_task)
+            self.add_task_button.grid(row=30,column=0,pady=30)
+            messagebox.showwarning("Error","Name \"" + name + "\" already exist")
+    def refresh(self):
+        pass
+class FinishButton(Button):
+    def __init__(self,frame,task,data,master,grandmaster):
+        super().__init__(frame)
+        self.root = frame
+        self.task = task
+        self.data = data
+        self["text"] = "finish"
+        self["command"] = self.finish
+        self.master = master
+        self.grandmaster = grandmaster
+    def finish(self):
+        self.data.finished(self.task)
+        self.grandmaster.switch_frame(AllTasksPage,self.data)
 class TaskChangeButton(Button):
     def __init__(self,frame,task,taskrow,task_frame,data):
         super().__init__(frame)
@@ -406,7 +477,7 @@ class TaskChangeButton(Button):
         self["command"] = self.confirm
         self.task_frame.destroy()
         change_frame = Frame(self.root)
-        change_frame.grid(column=0,row = self.taskrow)
+        change_frame.grid(column=0,row = self.taskrow,sticky=W)
         e_name = Entry(change_frame,width=20)
         e_name.insert(0,self.task.name)
         e_name.grid(column=0,row=0,rowspan=2,padx=10)
@@ -433,14 +504,21 @@ class TaskChangeButton(Button):
         self.cal = cal
         self.type = combo_type
     def confirm(self):
-        self.task.name = self.name.get()
-        self.task.importance = self.importance.get()
-        self.task.duration = int(self.duration.get())/2
-        self.task.type = self.type.get()
-        if self.task.type not in self.data.types:
-            self.data.types.append(self.task.type)
-        ymd = self.cal.get_date().split("/")
-        self.task.date = [int(ymd[1]),int(ymd[2])]
+        name = self.name.get()
+        old_name = self.task.name
+        if name not in self.data.alltasks.tasks or name == old_name:
+            self.data.alltasks.delete(self.task)
+            self.task.name = name
+            self.task.importance = self.importance.get()
+            self.task.duration = int(self.duration.get())/2
+            self.task.type = self.type.get()
+            if self.task.type not in self.data.types:
+                self.data.types.append(self.task.type)
+            ymd = self.cal.get_date().split("/")
+            self.task.date = [int(ymd[1]),int(ymd[2])]
+            self.data.alltasks.add(self.task)
+        else:
+            messagebox.showwarning("Error","Name \"" + name + "\" already exist")
         self.frame.destroy()
         task_frame =Frame(self.root)
         task_frame.grid(row = self.taskrow,column = 0, pady=5,sticky=W)
@@ -650,7 +728,7 @@ t1 = Task("a",2.5,3,[7,20])
 t2 = Task("b",2,2,[8,30])
 t3 = Task("c",2,2,[7,21])
 all = AllTasks([t1,t2,t3])
-data = Data(all)
-data.alltasks.data = data
+f = FinishedTasks([])
+data = Data(all,f)
 app = main(data)
 app.mainloop()
