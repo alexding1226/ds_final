@@ -23,19 +23,24 @@ class task_list():
 
     def sort(self, type = "deadline", rev = True):
         if type == "deadline":
-            self.list.sort(self.list,key= lambda task_item:(task_item.deadline_date, task_item.deadline_time,
+            self.list = sorted(self.list,key= lambda task_item:(task_item.deadline_date, task_item.deadline_time,
                 task_item.importance), reverse = not (rev))
-            return self.tasks
     
     def delete(self,task):
         self.tasks.remove(task)
 
-class test():
-    def __init__(self,list):
-        test = list
+    def 
 
 if __name__ == "__main__": #testing
-    t1 = test([1,2])
-    t2 = test([3,4])
-    T = [t1,t2]
-    print(T.sort())
+    general_task_list = [[2,24,1,3,"B","exercise",1,["academy"]],[2,24,2,3,"C","academy",1,[]],[1,24,1,3,"A","academy",1,[]], [4,24,1,1,"D","Exercise",1,[]]]
+    
+    # date, begin time, endd time
+    general_period_list = [(1,9,12),(2,13,19),(3,12,15)]
+
+    t1 = task_item("B",3,1,2,24,1,"exercise",["academy"])
+    t4 = task_item("A",3,1,1,24,1,"academy",[])
+    t3 = task_item("C",3,2,3,24,1,"academy",[])
+    t2 = task_item("D",1,1,4,24,1,"exercise",[])
+    T = task_list([t1,t2,t3,t4])
+    T.sort()
+    print(T)
