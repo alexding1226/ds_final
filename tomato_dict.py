@@ -60,7 +60,7 @@ class FinishedTasks():
             self.tasks = sorted(self.tasks,key= lambda task:task.importance,reverse = (rev))
             return self.tasks
         elif type == "duration":
-            self.tasks = sorted(self.tasks,key= lambda task:task.duration,reverse = (rev))
+            self.tasks = sorted(self.tasks,key= lambda task:task.duration,reverse =  (rev))
             return self.tasks
         elif type == "name":
             self.tasks = sorted(self.tasks,key= lambda task:task.name,reverse = not (rev))
@@ -79,7 +79,8 @@ class Data():
         self.types = ["study","exercise","homework"]
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
         self.today = self.alltasks.today
-        self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":"purple","homework":"green"}
+        self.cand_color = [[],[],[],[]]
+        self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":["deep pink","pink"],"homework":["green2","palegreen1"]}
         self.finishtasks =finished
         self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
         self.schedule[1][0].whentodo = [7,2,10]
@@ -218,28 +219,31 @@ class AllTasksPage(Frame):
             no_task_label.place(anchor="c",relx=.5,rely=.5)
             taskrow = 1
         for task in self.alltasks.tasks.values():
-            task_frame =Frame(self.frame_tasks.interior)
+            color = self.data.typecolor[task.type][0]
+            task_frame =Frame(self.frame_tasks.interior,bg=color)
             task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
-            name_label=Label(task_frame,text=task.name,width=20)
+            name_label=Label(task_frame,text=task.name,width=20,bg=color)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
-            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5,bg=color)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8,bg=color)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
-            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20,bg=color)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
-            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l = Label(task_frame,text=task.type,width = 10,bg=color)
             type_l.grid(row=0,column=4,padx = 30,sticky=E)
             type_l.grid_propagate(0)
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
             finished_button = FinishButton(task_frame,task,self.data,self,master)
+            finished_button["bg"] = color
             finished_button.grid(row=0,column=5)
             delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
+            delete_button["bg"] = color
             delete_button.grid(row =0,column=6,padx=10)
             taskrow += 1
         self.finished_frame = Frame()
@@ -253,25 +257,27 @@ class AllTasksPage(Frame):
             name_label.grid_propagate(0)
         finished_row = 1
         for task in self.data.finishtasks.tasks:
-            task_frame =Frame(self.finished_frame,width=800,height=25)
+            color = self.data.typecolor[task.type][1]
+            task_frame =Frame(self.finished_frame,width=800,height=25,bg=color)
             task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
             task_frame.grid_propagate(0)
-            name_label=Label(task_frame,text=task.name,width=20)
+            name_label=Label(task_frame,text=task.name,width=20,bg=color)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
-            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5,bg=color)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8,bg=color)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
-            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20,bg=color)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
-            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l = Label(task_frame,text=task.type,width = 10,bg=color)
             type_l.grid(row=0,column=4,padx = 30,sticky=W)
             type_l.grid_propagate(0)
             delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
+            delete_button["bg"] = color
             delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
@@ -303,6 +309,7 @@ class AllTasksPage(Frame):
             no_task_label.place(anchor="c",relx=.5,rely=.5)
             taskrow = 1
         for task in tasks:
+            color = self.data.typecolor[task.type][0]
             task = task[1]
             task_frame =Frame(self.frame_tasks.interior)
             task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
@@ -324,6 +331,7 @@ class AllTasksPage(Frame):
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
             task_button.grid(row = taskrow,column = 1)
             finished_button = FinishButton(task_frame,task,self.data,self,self.master)
+            finished_button["bg"] = color
             finished_button.grid(row=0,column=5)
             delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
             delete_button.grid(row =0,column=6,padx=10)
@@ -339,25 +347,27 @@ class AllTasksPage(Frame):
             name_label.grid_propagate(0)
         finished_row = 1
         for task in self.data.finishtasks.sort(type,not rev):
-            task_frame =Frame(self.finished_frame,width=800,height=25)
+            color = self.data.typecolor[task.type][1]
+            task_frame =Frame(self.finished_frame,width=800,height=25,bg=color)
             task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
             task_frame.grid_propagate(0)
-            name_label=Label(task_frame,text=task.name,width=20)
+            name_label=Label(task_frame,text=task.name,width=20,bg=color)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
-            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5,bg=color)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.duration)+"hrs",width=8,bg=color)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
-            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20,bg=color)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
-            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l = Label(task_frame,text=task.type,width = 10,bg=color)
             type_l.grid(row=0,column=4,padx = 30,sticky=W)
             type_l.grid_propagate(0)
             delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
+            delete_button["bg"] = color
             delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
         self.add_task_button = Button(self,text="+",command=self.add_task)
@@ -396,6 +406,7 @@ class AllTasksPage(Frame):
         ymd = cal.get_date().split("/")
         if name.get() not in self.data.alltasks.tasks:
             task = Task(name.get(),int(dur.get())/2,imp.get(),[int(ymd[1]),int(ymd[2])],type.get())
+            color = self.data.typecolor[task.type][0]
             self.data.alltasks.add(task)
             if type.get() not in self.data.types:
                 self.data.types.append(type.get())
@@ -424,8 +435,10 @@ class AllTasksPage(Frame):
             task_button.grid(row = len(self.data.alltasks.tasks)-1,column = 1)
             finished_button = FinishButton(task_frame,task,self.data,self,self.master)
             finished_button.grid(row=0,column=5)
+            finished_button["bg"] = color
             delete_button = Delete_notfinishButton(task_frame,task,self.data,self.master)
             delete_button.grid(row =0,column=6,padx=10)
+            delete_button["bg"] = color
             taskrow = len(self.data.alltasks.tasks)
             self.finished_frame.destroy()
             if len(self.data.finishtasks.tasks)>0:
@@ -438,24 +451,26 @@ class AllTasksPage(Frame):
                 name_label.grid_propagate(0)
             finished_row = 1
             for task in self.data.finishtasks.tasks:
-                task_frame =Frame(self.finished_frame)
+                color = self.data.typecolor[task.type][1]
+                task_frame =Frame(self.finished_frame,bg=color)
                 task_frame.grid(row = finished_row,column = 0, pady=5,sticky=W)
-                name_label=Label(task_frame,text=task.name,width=20)
+                name_label=Label(task_frame,text=task.name,width=20,bg=color)
                 name_label.grid(row = 0,column=0,padx=20,sticky=W)
                 name_label.grid_propagate(0)
-                imp_l = Label(task_frame,text="*" * task.importance,width=5)
+                imp_l = Label(task_frame,text="*" * task.importance,width=5,bg=color)
                 imp_l.grid_propagate(0)
                 imp_l.grid(row=0,column=1,padx=20,sticky=W)
-                du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+                du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8,bg=color)
                 du_l.grid(row=0,column=2,padx=20)
                 du_l.grid_propagate(0)
-                date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+                date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20,bg=color)
                 date_l.grid_propagate(0)
                 date_l.grid(row=0,column=3,padx=20,sticky=W)
-                type_l = Label(task_frame,text=task.type,width = 10)
+                type_l = Label(task_frame,text=task.type,width = 10,bg=color)
                 type_l.grid(row=0,column=4,padx = 30,sticky=E)
                 type_l.grid_propagate(0)
                 delete_button = Delete_finishButton(task_frame,task,self.data,self.master)
+                delete_button["bg"] = color
                 delete_button.grid(row =0,column=5,padx=10)
                 finished_row += 1
         else:
@@ -465,8 +480,6 @@ class AllTasksPage(Frame):
             self.add_task_button = Button(self,text="+",command=self.add_task)
             self.add_task_button.grid(row=30,column=0,pady=30)
             messagebox.showwarning("Error","Name \"" + name + "\" already exist")
-    def refresh(self):
-        pass
 class FinishButton(Button):
     def __init__(self,frame,task,data,master,grandmaster):
         super().__init__(frame)
@@ -561,26 +574,30 @@ class TaskChangeButton(Button):
         else:
             messagebox.showwarning("Error","Name \"" + name + "\" already exist")
         self.frame.destroy()
-        task_frame =Frame(self.root)
+        color = self.data.typecolor[self.task.type][0]
+        task_frame =Frame(self.root,bg=color)
+        self.task_frame = task_frame
         task_frame.grid(row = self.taskrow,column = 0, pady=5,sticky=W)
-        name_label=Label(task_frame,text=self.task.name,width=20)
+        name_label=Label(task_frame,text=self.task.name,width=20,bg=color)
         name_label.grid(row = 0,column=0,padx=20,sticky=W)
         name_label.grid_propagate(0)
-        imp_l = Label(task_frame,text="*" * self.task.importance,width=5)
+        imp_l = Label(task_frame,text="*" * self.task.importance,width=5,bg=color)
         imp_l.grid_propagate(0)
         imp_l.grid(row=0,column=1,padx=20,sticky=W)
-        du_l = Label(task_frame,text=str(self.task.time_finished) +"/" + str(self.task.duration)+"hrs",width=8)
+        du_l = Label(task_frame,text=str(self.task.time_finished) +"/" + str(self.task.duration)+"hrs",width=8,bg=color)
         du_l.grid(row=0,column=2,padx=20)
         du_l.grid_propagate(0)
-        date_l =Label(task_frame,text="%d/%d"%(self.task.date[0],self.task.date[1]),width=20)
+        date_l =Label(task_frame,text="%d/%d"%(self.task.date[0],self.task.date[1]),width=20,bg=color)
         date_l.grid(row=0,column=3,padx=20,sticky=W)
         date_l.grid_propagate(0)
-        type_l = Label(task_frame,text=self.task.type,width = 10)
+        type_l = Label(task_frame,text=self.task.type,width = 10,bg=color)
         type_l.grid(row=0,column=4,padx = 30,sticky=E)
         type_l.grid_propagate(0)
         finished_button = FinishButton(task_frame,self.task,self.data,self,self.master.master.master.master.master)
+        finished_button["bg"] = color
         finished_button.grid(row=0,column=5)
         delete_button = Delete_notfinishButton(task_frame,self.task,self.data,self.master.master.master.master.master)
+        delete_button["bg"] = color
         delete_button.grid(row =0,column=6,padx=10)
         self["text"] = "change"
         self["command"] = self.change
@@ -674,9 +691,9 @@ class TaskFrame(Frame):
         if doing:
             passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
             y = passtime * len_hour
-            task_canvas.create_line(50,y,400,y)
             now_label = Label(task_canvas,text="now",bg = color)
             now_label.place(x=10,y=y-10,in_=task_canvas)
+            task_canvas.create_line(50,y,400,y,width=3)
         self.var = IntVar
         check_done = Checkbutton(self,text="finished",command=self.finished,variable=self.var)
         check_done.grid(row=0,column=2)
@@ -756,10 +773,10 @@ class RestFrame(Frame):
         if doing:
             passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
             y = passtime * len_hour
-            task_canvas.create_line(50,y,400,y)
+            task_canvas.create_line(50,y,400,y,width=3)
             now_label = Label(task_canvas,text="now")
-            now_label.place(x=10,y=y,in_=task_canvas)
-        pad_frame = Frame(self,width=71,highlightbackground="black",highlightthickness=5)
+            now_label.place(x=10,y=y-10,in_=task_canvas)
+        pad_frame = Frame(self,width=71,highlightthickness=5)
         pad_frame.grid(row = 0,column=2)
 
 class ScheduleFrame(Frame):
