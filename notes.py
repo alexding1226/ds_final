@@ -1,54 +1,77 @@
 from tkinter import *
-from tkinter import Scrollbar
+from tkinter import ttk
 import tkinter
 
-class Notes(Frame):
-    def __init__(self,master):
-        super(Notes, self).__init__(master)
-        self.allFrame()
-        self.firstTime = True
-        self.counts = 0
-        
-    def addTitle(self):
-        self.resultT = simpledialog.askstring(title = '獲取資訊',prompt='請輸入姓名：',initialvalue = '可以設定初始值')
-        self.titleT = Label(self.col, textvariable=self.resultT, bg="white", fg="pink", font=('Arial', 18))
-        self.titleT.grid(row=0, column=0)
-        self.counts += 1
-    def addContent(self):
-        self.resultC = simpledialog.askstring(title = '獲取資訊',prompt='請輸入內容：',initialvalue = '可以設定初始值')
-        self.titleC = Label(self.col, textvariable=self.resultT, bg="white", fg="pink", font=('Arial', 18))
-        self.titleC.grid(row=self.count, column=1)
-        self.counts += 1
 
-    def allFrame(self):
-        self.firstFrame = Frame(self)
-        self.col = Frame(self.firstFrame)
-        if self.firstTime == False:
-            self.counts += 1
-        self.addTitleBtn = Button(self,text = '添加任務',command = self.addTitle)
-        self.addTitleBtn.grid(row=2, column=2)
-        
-        
-        if self.counts >= 1:
-            self.addTitleBtn = Button(self.col,text = '添加清單',command = self.addContent)
-            self.addTitleBtn.grid(row=1, column=1)
-        
-        self.firstFrame.grid(row=0, column=0)
-        
-        
-        
-        
-        
-        
+class Notes(tkinter.Tk):
+    def __init__(self, tasks=None):
+        super().__init__()
+        self.bgColor = ["RoyalBlue","DarkSlateBlue", "DarkMagenta"]
+
+        if not tasks:
+            self.tasks = []
+            task1 = tkinter.Label(self, text="Today's NOTES", bg="white", fg="tomato", pady=20, font=("Times",23))
+            task1.pack(side=tkinter.TOP, fill=tkinter.X)
     
-if __name__ == '__main__':
-    root = Tk()
-    root.title("Notes")
-    root.resizable(0,0)
-    app = Notes(root)
-    app.configure(background="white")
-    root.mainloop()
+        self.taskCreate = tkinter.Text(self, height=3, bg="DarkCyan", fg="white")
+        self.taskCreate.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.taskCreate.focus_set()
+        
+        self.bind('<Return>', self.addTask)
+
+         
+    def addTask(self, event=None):
+        newText = self.taskCreate.get(1.0,tkinter.END).strip()
+        
+        if len(newText) > 0:
+            newTask = tkinter.Label(self, text = newText, pady=20)
+            doneButton = ttk.Button(newTask, text = "done",command = lambda:self.removeTask(doneButton))
+            
+            bgIdx = len(self.tasks)%len(self.bgColor)
+            bgc = self.bgColor[bgIdx]
+            
+            newTask.configure(bg=bgc,fg="white",font=("Times",20))
+            
+            newTask.pack(side=tkinter.TOP, fill=tkinter.X)
+            doneButton.pack(side=tkinter.RIGHT)
+            
+            self.tasks.append(newTask)
+            
+        self.taskCreate.delete(1.0, tkinter.END)
+        
+    def removeTask(self, done_button):
+        done_button.pack_forget()
+        done_button.master.pack_forget()
+        self.tasks.remove(done_button.master)
+
+    def closing(self):
+        write = open("data.txt","w")
+        for item in self.tasks:
+            print(item.cget("text"),file=write)
+        write.close()
+        self.destroy()
+    
 
 
+if __name__ == "__main__":
+    #saved tasks
+    try:
+        read = open("notes.txt","r")
+    except FileNotFoundError:
+        file = open("notes.txt","w")
+        file.close()
+        read=open("notes.txt","r")
+        
+    notes_lst=[]
+    for line in readfile:
+        line=line.strip()
+        notes_lst.append(line)
+    
+    notes = Notes(notes_lst)
+    notes.title("NOTES")
+    notes.geometry("700x500")
+    notes.protocol("WM_DELETE_WINDOW", notes.closing)
+    notes.mainloop()
+    
 
 
