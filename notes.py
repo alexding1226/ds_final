@@ -63,7 +63,7 @@ if __name__ == "__main__":
         read=open("notes.txt","r")
         
     notes_lst=[]
-    for line in readfile:
+    for line in read:
         line=line.strip()
         notes_lst.append(line)
     
