@@ -1,3 +1,4 @@
 schedule_1 : vanilla
 schedule_2 : featuring handling non-consecutive issue
 schedule_3 : integrating task_list & period_list into classes in DataFormat.py
+schedule_3.1 : add feature to defaultly not separate tasks

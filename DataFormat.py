@@ -10,24 +10,10 @@ class task_item():
         self.type = type # str
         self.min_length = min_length # int, every 30 min or 10 min 
         self.non_consecutive_type = non_consecutive_type # list of types that can't take place right after this task
-        self.partition_num = [1,duration//min_length]
+        #self.partition_num = [1,duration//min_length]
         self.partition = [duration]
         #for i in range():
         #    self.partition.append(min_length)
-
-    '''
-    def __init__(self,task_item):
-        self.name = task_item.name # str
-        self.duration = task_item.duration # int, every 30 min or 10 min 
-        self.importance = task_item.importance # int 1~5, 1 is the most important
-        self.deadline_date = task_item.deadline_date # int
-        self.deadline_time = task_item.deadline_time # int 
-        self.type = task_item.type # str
-        self.min_length = task_item.min_length # int, every 30 min or 10 min 
-        self.non_consecutive_type = task_item.non_consecutive_type # list of types that can't take place right after this task
-        self.partition_num = task_item.partition_num
-        self.partition = task_item.partition
-    '''
 
     def copy(self):
         copy = task_item(self.name,self.duration, self.importance, self.deadline_date, self.deadline_time,
@@ -40,7 +26,11 @@ class period_item:
         self.begin = begin_time
         self.end = end_time
 
-class list():
+    def copy(self):
+        copy = period_item(self.date, self.begin, self.end)
+        return copy
+
+class list(): ## 可以廢掉
     def __init__(self, list_of_tasks):
         self.list = list_of_tasks
     
