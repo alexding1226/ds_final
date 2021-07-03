@@ -3,7 +3,10 @@ from re import T
 import time
 import datetime
 from tkinter import *
+from tkinter import font
+from tkinter.font import ITALIC
 import tkinter.ttk as ttk
+from typing import Pattern
 from tkcalendar import Calendar
 from tkinter import messagebox
 class Task():
@@ -112,7 +115,7 @@ class main(Tk):
         Button(change_frame,text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15,sticky=N)
         Button(change_frame,text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15,sticky=N)
         Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15,sticky=N)
-        Button(change_frame,text="today",command=lambda:self.switch_frame(TodayPage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
+        Button(change_frame,text="schedule",command=lambda:self.switch_frame(SchedulePage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
         self.switch_frame(StartPage,data)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
@@ -391,7 +394,7 @@ class AllTasksPage(Frame):
         e_duration.grid(column=2,row=0,padx=10)
         Label(frame_addtask,text="*30min").grid(row=0,column=3)
         now = datetime.datetime.now()
-        cal = Calendar(frame_addtask,selectmode = "day",year = now.year,month = now.month,day = now.day)
+        cal = Calendar(frame_addtask,selectmode = "day",year = now.year,month = now.month,day = now.day,date_pattern = "yyyy/MM/dd")
         cal.grid(row = 0,column = 4,padx = 20)
         types=self.data.types[:]
         types.append("new")
@@ -543,7 +546,7 @@ class TaskChangeButton(Button):
         e_duration.grid(column=2,row=0,rowspan=2,padx=10)
         Label(change_frame,text="*30mins").grid(column=3,row=0,rowspan=2)
         now = datetime.datetime.now()
-        cal = Calendar(change_frame,selectmode = "day",year = now.year,month = self.task.date[0],day = self.task.date[1])
+        cal = Calendar(change_frame,selectmode = "day",year = now.year,month = self.task.date[0],day = self.task.date[1],date_pattern = "yyyy/MM/dd")
         cal.grid(column = 4,row = 0,padx = 10)
         types=self.data.types[:]
         types.append("new")
@@ -601,7 +604,14 @@ class TaskChangeButton(Button):
         delete_button.grid(row =0,column=6,padx=10)
         self["text"] = "change"
         self["command"] = self.change
-class TodayPage(VerticalScrolledFrame):
+class SchedulePage(Frame):
+    def __init__(self,master,data):
+        Frame.__init__(self,master)
+        todayframe = TodayFrame(self,data)
+        todayframe.pack(side="left")
+        scheduleframe = ScheduleFrame(self,data)
+        scheduleframe.pack(side="left")
+class TodayFrame(VerticalScrolledFrame):
     def __init__(self,master,data):
         VerticalScrolledFrame.__init__(self, master,700)
         self.data = data
@@ -610,15 +620,17 @@ class TodayPage(VerticalScrolledFrame):
         now = datetime.datetime.now()
         self.now = now
         self.now_hm = [now.hour,now.minute]
-        endtime = self.tasks[0].whentodo[2]
-        for task in self.tasks:
-            if task.whentodo[2] != endtime:
-                rest_time = task.whentodo[2] - endtime
-                rest_frame = RestFrame(self.interior,data,rest_time,endtime)
-                rest_frame.pack()
-            task_frame = TaskFrame(self.interior,data,task)
-            task_frame.pack()
-            endtime = task.whentodo[2] + task.duration
+        Label(self.interior,text="today:",font=('Helvetica', 20, ITALIC)).pack(side = "top",anchor=W,padx=30)
+        if len(self.tasks)>0:
+            endtime = self.tasks[0].whentodo[2]
+            for task in self.tasks:
+                if task.whentodo[2] != endtime:
+                    rest_time = task.whentodo[2] - endtime
+                    rest_frame = RestFrame(self.interior,data,rest_time,endtime)
+                    rest_frame.pack()
+                task_frame = TaskFrame(self.interior,data,task)
+                task_frame.pack()
+                endtime = task.whentodo[2] + task.duration
 class TaskFrame(Frame):
     def __init__(self,master,data,task):
         Frame.__init__(self,master)
@@ -779,12 +791,56 @@ class RestFrame(Frame):
         pad_frame = Frame(self,width=71,highlightthickness=5)
         pad_frame.grid(row = 0,column=2)
 
-class ScheduleFrame(Frame):
+class ScheduleFrame(VerticalScrolledFrame):
     def __init__(self,master,data):
-        Frame.__init__(self,master)
+        VerticalScrolledFrame.__init__(self, master,700)
         self.master = master
         self.data = data
         schedule = self.data.schedule
+        Label(self.interior,text="all:",font=('Helvetica', 20, ITALIC)).pack(anchor=W,padx=25)
+        for day in schedule:
+            day_frame = DayFrame(self.interior,data,day)
+            day_frame.pack(pady=20)
+class DayFrame(Frame):
+    def __init__(self,master,data,tasks):
+        Frame.__init__(self,master)
+        self.master = master
+        self.data = data
+        if len(tasks)>0:
+            date = "%d/%d"%(tasks[0].whentodo[0],tasks[0].whentodo[1])
+            date_frame = Frame(self)
+            date_frame.grid(row=0,column=0,sticky=N)
+            Label(date_frame,text=date,font=('Helvetica', 13, "bold")).pack()
+            tasks_frame = Frame(self)
+            tasks_frame.grid(row=0,column=1)
+            row = 0
+            for task in tasks:
+                starttime = task.whentodo[2]
+                start_hour = str(int(starttime//1))
+                if starttime%1 == 0:
+                    starttime_minute = "00"
+                else:
+                    starttime_minute = "30"
+                endtime = task.whentodo[2] + task.duration
+                endtime_hour = str(int(endtime//1))
+                if endtime%1 == 0:
+                    endtime_minute = "00"
+                else:
+                    endtime_minute = "30"
+                time_label = Label(tasks_frame,text=start_hour+ ":" + starttime_minute + "~" + endtime_hour + ":" + endtime_minute)
+                time_label.grid(row=row,column=0)
+                color = self.data.typecolor[task.type][0]
+                task_name_frame = Frame(tasks_frame,bg=color,width=300,height=20)
+                task_name_frame.grid(row = row,column=1)
+                task_label = Label(task_name_frame,text=task.name,bg = color,font = ('Helvetica', 15, "bold"))
+                task_label.place(anchor="c",relx=.5,rely=.5)
+                row += 1
+                
+
+                pass
+
+
+
         
 t1 = Task("a",2.5,3,[7,20])
 t2 = Task("b",2,2,[8,30])
