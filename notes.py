@@ -1,81 +1,58 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import Button
 import tkinter
 
 
-class Notes(tkinter.Tk):
-    def __init__(self, tasks=None):
-        super().__init__()
+class NotesPage(Frame):
+    def __init__(self,master, task=None):
+        super().__init__(master)
         self.bgColor = ["RoyalBlue","DarkSlateBlue", "DarkMagenta", "Teal", "Indigo", "PaleVioletRed", "Crimson", "FireBrick","IndianRed", "Peru", "DarkGoldenRod", "OliveDrab", "LightSeaGreen", "CornflowerBlue", "DarkBlue", "DarkSlateBlue"]
-
-        if not tasks:
+        self["height"] = 500
+        self["width"] = 500
+        self.pack_propagate(0)
+        
+        if not task:
             self.tasks = []
-            task1 = tkinter.Label(self, text="Today's NOTES", bg="white", fg="tomato", pady=20, font=("Times",23))
-            task1.pack(side=tkinter.TOP, fill=tkinter.X)
+            task1 = Label(self, text="NOTES", bg="white", fg="tomato", pady=20, font=("Times",23))
+            task1.pack(side=TOP, fill=X)
     
-        self.taskCreate = tkinter.Text(self, height=1, bg="DarkCyan", fg="white")
-        self.taskCreate.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.taskCreate = Text(self, height=1, bg="DarkCyan", fg="white")
+        self.taskCreate.pack(side=BOTTOM, fill=X)
         self.taskCreate.focus_set()
-        self.instru = tkinter.Label(self, text="Fill your tasks below and press ENTER. (Maximum 40 words, 16 tasks)", fg="black")
-        self.instru.pack(side=tkinter.BOTTOM)
+        self.instru = Label(self, text="Fill your note below and press ENTER. (Maximum 40 words, 16 notes)", fg="black")
+        self.instru.pack(side=BOTTOM)
+        self.taskCreate.bind('<Return>', self.addTask)
         
-        self.bind('<Return>', self.addTask)
 
-         
-    def addTask(self, event=None):
-        newText = self.taskCreate.get(1.0,tkinter.END).strip()
-        
-        if len(newText) > 0:
-            newTask = tkinter.Label(self, text = newText, pady=20)
-            doneButton = ttk.Button(newTask, text = "done",command = lambda:self.removeTask(doneButton))
-            
-            bgIdx = len(self.tasks)%len(self.bgColor)
-            bgc = self.bgColor[bgIdx]
-            
-            newTask.configure(bg=bgc,fg="white",font=("Times",20))
-            
-            newTask.pack(side=tkinter.TOP, fill=tkinter.X)
-            doneButton.pack(side=tkinter.RIGHT)
-            
-            self.tasks.append(newTask)
-            
-        self.taskCreate.delete(1.0, tkinter.END)
-        
-    def removeTask(self, done_button):
-        done_button.pack_forget()
-        done_button.master.pack_forget()
-        self.tasks.remove(done_button.master)
-
-    def closing(self):
-        write = open("data.txt","w")
-        for item in self.tasks:
-            print(item.cget("text"),file=write)
-        write.close()
-        self.destroy()
+    def addTask(self, event):
+        self.newText = self.taskCreate.get(1.0,END).strip()
     
+        if len(self.newText) > 0:
+            self.newTask = Label(self, text = self.newText, pady=20)
+            self.tasks.append(self.newTask)
+            #self.doneButton = Button(self.newTask, text = "done",command = lambda:self.tasks.remove(self.doneButton.master))
+            #print(self.newText)
+            self.bgIdx = len(self.tasks)%len(self.bgColor)
+            self.bgc = self.bgColor[self.bgIdx]
+            self.newTask.configure(bg=self.bgc,fg="white",font=("Times",20))
+            self.newTask.pack(side=TOP, fill=X)
+            doneButton = Button(self.newTask, text = "done",command = lambda:self.removeTask(doneButton))
+            doneButton.pack(side=RIGHT)
+   
+        self.taskCreate.delete(1.0, END)
+        
+    def removeTask(self, doneButton):
+        doneButton.pack_forget()
+        doneButton.master.pack_forget()
+        self.tasks.remove(doneButton.master)
+
 
 
 if __name__ == "__main__":
-    # Saved tasks in local
-    try:
-        read = open("notes.txt","r")
-    except FileNotFoundError:
-        file = open("notes.txt","w")
-        file.close()
-        read=open("notes.txt","r")
-        
-    notes_lst=[]
-    for line in read:
-        line=line.strip()
-        notes_lst.append(line)
-    
-    notes = Notes(notes_lst)
-    notes.title("NOTES")
-    # Please modify the windows size
-    notes.geometry("700x500")
-    notes.protocol("WM_DELETE_WINDOW", notes.closing)
-    notes.mainloop()
-    
 
-
-
+    root = Tk()
+    root.geometry ("700x1000")
+    notes = NotesPage(root)
+    notes.pack()
+    root.mainloop()
