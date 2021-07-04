@@ -4,3 +4,20 @@ schedule_3 : integrating task_list & period_list into classes in DataFormat.py
 schedule_3.1 : add feature to defaultly not separate tasks
 
 schedule_4 : update the interface, and transfer to using class "my_list"
+
+
+Result of Test fot heap :
+running time for k = 1000 :  
+list : 
+first time : 9.16, 11.77, 13.78, 13.20, 14.42 > avg = 12
+second time : 9, 9, 9, 9.5, 9.9, 9.72 > ~9.5
+
+heap : 9.23, 8.93, 8.95, 9.06, 9.12 > ~9
+
+running time for k = 3000 :  
+list 44.8
+heap 43.7
+
+conclusion : 
+1. no significant differance
+2. time complexity roughly O( n log n ) (very roughly)

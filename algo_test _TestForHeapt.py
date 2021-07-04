@@ -1,7 +1,7 @@
 #import algorithm.py
 import time
 import heapq as hp
-import DataFormat as data
+import DataFormat_test as data
 
 # Pseudo version: 
 # total time insufficient warning should take plasce @ task adding section
@@ -116,7 +116,9 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
     
     def __init__(self,data_task_list,data_period_list): 
         self.data_task_list = data_task_list
-        self.data_task_list.sort()
+        #self.data_task_list.sort()
+        hp.heapify(self.data_task_list)
+        ##
         self.data_period_list = data_period_list
         self.data_period_list.sort()
         
@@ -126,7 +128,9 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
             self.period_list.append(i.copy())
         
         self.flag = 0 # 先試忽略type，再試忽略min_length
-        self.task_list.sort()
+        ##self.task_list.sort()
+        hp.heapify(self.task_list)
+        ##
         self.period_list.sort()
         
     def CheckExpire(self,task_deadline_date, task_deadline_time, current_date, current_time):
@@ -190,7 +194,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                 else:
                     break
             S_new.task_list = data.my_list(self.data_task_list)
-            S_new.task_list.sort()
+            #S_new.task_list.sort()
             return S_new.Schedule()
 
         else:
@@ -214,7 +218,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                 schedule.append([]) 
                 
             if self.task_list.Peek().type in current_non_consecutive:
-                if self.task_list.Swap():
+                if self.task_list.Swap(): 
                     t_duration = self.task_list.Peek().duration
                 else:
                     print("can't skip this, no other task left")
