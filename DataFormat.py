@@ -91,8 +91,8 @@ class period_item:
         else:
             return False
 
-''''''
-class list: ## 可以廢掉
+'''
+class list: ##原本在用的，可以廢掉了
     def __init__(self, list_of_tasks):
         self.list = list_of_tasks
     
@@ -135,51 +135,25 @@ class list: ## 可以廢掉
     
     def get(self,index):
         return self.list[index]
-''''''
+'''
 
-class my_list(List): ## 可以廢掉
+class my_list(List): 
     def __init__(self, list_item):
         super().__init__(list_item)
-    '''     
-    def add(self, task_item):
-        self.list.append(task_item)
     
-    def delete(self, task_item):
-        self.list.remove(task_item)
-
-    def sort(self, type = "deadline", rev = True):
-        if type == "deadline":
-            self.list = sorted(self.list,key= lambda task_item:(task_item.deadline_date, task_item.deadline_time,
-                task_item.importance), reverse = not (rev))
-        elif type == "time":
-            self.list = sorted(self.list,key= lambda period_item:(period_item.date, period_item.begin), reverse = not (rev))
-        return self.list
-    
-    def pop(self,index):
-        self.list.pop(index)
-
-    def len(self):
-        return len(self.list)
-
-    def index(self,task_item):
-        return self.list.index(task_item)
-    
-    def get(self,index):
-        return self.list[index]
-    '''
     def RemoveMin(self):
-        self.list.pop(0)
-
+        super().pop(0)
+        
     def Swap(self):
-        if len(self.list) > 1:
-            temp = self.list[0]
-            self.list[0] = self.list[1] 
-            self.list[1] = temp
+        if len(self) > 1:
+            temp = self[0]
+            self[0] = self[1] 
+            self[1] = temp
             return True
         return False
     
     def Peek(self):
-        return self.list[0]
+        return self[0]
 
 if __name__ == "__main__": #testing
     

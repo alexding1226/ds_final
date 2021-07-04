@@ -64,10 +64,10 @@ P = [p1,p2,p3,p4,p5,p6]
 ''''''
 
 ## Algorithm, abstractized : 
-# 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
+# 現在版本 : 先試著不切，照non_consecutive排，不行就delay。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
 # task_items 會被 modified
 
-# insufficient time detection : # using built-in list
+# insufficient time detection : using built-in list
 def Detect(data_task_list,data_period_list): 
     amount_task = 0
     amount_period = 0
@@ -98,7 +98,8 @@ def Detect(data_task_list,data_period_list):
     print("the amount of tasks is okay")
     return 0
 
-class schedule_3: # 先delay，expire就把min_lentgh刪掉
+# main scheduling body : using data.my_list
+class schedule_3:
     
     def __init__(self,data_task_list,data_period_list): 
         self.data_task_list = data_task_list
