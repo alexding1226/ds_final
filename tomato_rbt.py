@@ -12,6 +12,8 @@ from tkinter import messagebox
 import red_black_tree as rbt
 import random
 import string
+import application
+import notes
 
 
 class Task():
@@ -132,6 +134,8 @@ class main(Tk):
         Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15,sticky=N)
         Button(change_frame,text="schedule",command=lambda:self.switch_frame(SchedulePage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
         Button(change_frame,text = "set period",command=lambda:self.switch_frame(PeriodPage,data)).grid(column=0,row=4,pady=15,padx=15,sticky=N)
+        Button(change_frame,text="pomodoro",command=lambda:self.switch_frame(application.PomodoroPage,data)).grid(column=0,row=5,pady=15,sticky=N)
+        Button(change_frame,text="notes",command=lambda:self.switch_frame(notes.NotesPage,data)).grid(column=0,row=6,pady=15,sticky=N)
         self.switch_frame(StartPage,data)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
@@ -965,14 +969,6 @@ class DeletePeriodButton(Button):
     def delete(self):
         self.data.period[self.day] = []
         self.master.master.master.switch_frame(PeriodPage,self.data)
-
-
-
-
-
-
-
-
 
         
 t1 = Task("a",2.5,3,[7,20])
