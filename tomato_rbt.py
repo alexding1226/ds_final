@@ -10,6 +10,8 @@ from typing import Pattern
 from tkcalendar import Calendar
 from tkinter import messagebox
 import red_black_tree as rbt
+import random
+import string
 
 
 class Task():
@@ -29,8 +31,12 @@ class AllTasks():
         self.tasks = dict()
         for task in tasks:
             self.tasks[task.name] = task
-    def add(self,task):
+        self.rbt = rbt.RBTree()
+        for task in tasks:
+            self.rbt.insert(key=task.name,data=task)
+    def add(self,task,test = False):
         self.tasks[task.name] = task
+        self.rbt.insert(key=task.name,data = task)
     def sort(self ,type, rev = True):
         if type == "type":
             a = sorted(self.tasks.items(),key = lambda task:task[1].type ,reverse = not (rev))
@@ -42,8 +48,12 @@ class AllTasks():
             a = sorted(self.tasks.items(),key = lambda task:task[1].duration ,reverse =  (rev))
             return a
         elif type == "name":
-            a = sorted(self.tasks.items(),key = lambda task:task[1].name ,reverse = not (rev))
-            return a
+            result = []
+            for task in self.rbt:
+                result.append(task[1])
+            if not rev :
+                result.reverse()
+            return result
         elif type == "deadline":
             a = sorted(self.tasks.items(),key = lambda task:task[1].date ,reverse = not (rev))
             return a
@@ -53,6 +63,7 @@ class AllTasks():
         self.today[1].whentodo = [7,1,21]
     def delete(self,task):
         del self.tasks[task.name]
+        self.rbt.delete(key=task.name)
 class FinishedTasks():
     def __init__(self,tasks) :
         self.tasks = tasks
@@ -317,23 +328,26 @@ class AllTasksPage(Frame):
             no_task_label.place(anchor="c",relx=.5,rely=.5)
             taskrow = 1
         for task in tasks:
+            if type == "name":
+                task = task
+            else:
+                task = task[1]
             color = self.data.typecolor[task.type][0]
-            task = task[1]
-            task_frame =Frame(self.frame_tasks.interior)
+            task_frame =Frame(self.frame_tasks.interior,bg=color)
             task_frame.grid(row = taskrow,column = 0, pady=5,sticky=W)
-            name_label=Label(task_frame,text=task.name,width=20)
+            name_label=Label(task_frame,text=task.name,width=20,bg=color)
             name_label.grid(row = 0,column=0,padx=20,sticky=W)
             name_label.grid_propagate(0)
-            imp_l = Label(task_frame,text="*" * task.importance,width=5)
+            imp_l = Label(task_frame,text="*" * task.importance,width=5,bg=color)
             imp_l.grid_propagate(0)
             imp_l.grid(row=0,column=1,padx=20,sticky=W)
-            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8)
+            du_l = Label(task_frame,text=str(task.time_finished) +"/" + str(task.duration)+"hrs",width=8,bg=color)
             du_l.grid(row=0,column=2,padx=20)
             du_l.grid_propagate(0)
-            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20)
+            date_l = Label(task_frame,text="%d/%d"%(task.date[0],task.date[1]),width=20,bg=color)
             date_l.grid_propagate(0)
             date_l.grid(row=0,column=3,padx=20,sticky=W)
-            type_l = Label(task_frame,text=task.type,width = 10)
+            type_l = Label(task_frame,text=task.type,width = 10,bg=color)
             type_l.grid(row=0,column=4,padx = 30,sticky=E)
             type_l.grid_propagate(0)
             task_button = TaskChangeButton(self.frame_tasks.interior,task,taskrow,task_frame,self.data)
@@ -510,6 +524,7 @@ class Delete_notfinishButton(Button):
         self["text"] = "delete"
         self["command"] = self.delete
         self.grandmaster = grandmaster
+        self["bg"] = data.typecolor[task.type][0]
     def delete(self):
         self.data.alltasks.delete(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
@@ -521,6 +536,7 @@ class Delete_finishButton(Button):
         self["text"] = "delete"
         self["command"] = self.delete
         self.grandmaster = grandmaster
+        self["bg"] = data.typecolor[task.type][0]
     def delete(self):
         self.data.finishtasks.delete(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
@@ -850,9 +866,10 @@ class PeriodPage(Frame):
         row = 0
         for day in days:
             day_frame = Frame(self)
-            day_frame.grid(row=row,column=0,pady=25)
-            day_label = Label(day_frame,text=day,font =('Microsoft Sans Serif',16))
-            day_label.grid(row = 0,column=0)
+            day_frame.grid(row=row,column=0,pady=25,sticky=W)
+            day_label = Label(day_frame,text=day+":",font =('Microsoft Sans Serif',16),width=10)
+            day_label.pack(side="left")
+            day_label.pack_propagate(0)
             period_text = []
             if len(self.period[day])>0:
                 for period in self.period[day]:
@@ -862,7 +879,6 @@ class PeriodPage(Frame):
                         startmin = "30"
                     else:
                         startmin = "00"
-                    period_text.append(starthour+":"+startmin)
                     endtime = period[1]
                     endhour = str(int(endtime//1))
                     if endtime %1 == 0.5:
@@ -870,13 +886,90 @@ class PeriodPage(Frame):
                     else:
                         endmin = "00"
                     period_text.append(starthour+":"+startmin + "~" + endhour + ":" + endmin)
-            period_text = "  ".join(period_text)
-            Label(day_frame,text=period_text).grid(row=0,column=1)
-                
-
-
-
+            period_text = "     ".join(period_text)
+            period_label = Label(day_frame,text=period_text,font = ('Microsoft Sans Serif',16),width=60,anchor=W)
+            period_label.pack(side="left")
+            period_label.pack_propagate(0)
+            delete_button = DeletePeriodButton(day_frame,data,day)
+            delete_button.pack(side="right")
             row += 1
+        add_period_frame = Frame(self)
+        add_period_frame.grid(row = row,column=0,sticky=W,pady=25)
+        Label(add_period_frame,text="add period:",font= ('Microsoft Sans Serif',16),fg="red").grid(row = 0,column=0,sticky=W)
+        day_combo = ttk.Combobox(add_period_frame,values=days,state="readonly",width=10)
+        day_combo.current(0)
+        day_combo.grid(row = 0,column=1,padx=10)
+        hour_start_entry = Entry(add_period_frame,width=5)
+        hour_end_entry = Entry(add_period_frame,width=5)
+        min_start_combo = ttk.Combobox(add_period_frame,values = ["00","30"],state="readonly",width=5)
+        min_start_combo.current(0)
+        min_end_combo = ttk.Combobox(add_period_frame,values=["00","30"],state="readonly",width=5)
+        min_end_combo.current(0)
+        hour_start_entry.grid(row = 0,column=2)
+        Label(add_period_frame,text=":").grid(row = 0,column=3)
+        min_start_combo.grid(row = 0,column=4)
+        Label(add_period_frame,text="~").grid(row=0,column=5)
+        hour_end_entry.grid(row = 0,column=6)
+        Label(add_period_frame,text=":").grid(row = 0,column= 7)
+        min_end_combo.grid(row = 0,column=8)
+        Button(add_period_frame,text="add",command=self.add).grid(row = 0,column=9)
+        self.day = day_combo
+        self.starthour = hour_start_entry
+        self.startmin = min_start_combo
+        self.endhour = hour_end_entry
+        self.endmin = min_end_combo
+    def add(self):
+        day = self.day.get()
+        try:
+            starthour = int(self.starthour.get())
+            endhour = int(self.endhour.get())
+        except:
+            messagebox.showwarning("Error","Please enter integer")
+            return
+        if self.startmin.get() == "00":
+            starttime = starthour
+        else:
+            starttime = starthour+0.5
+        if self.endmin.get() == "00":
+            endtime = endhour
+        else:
+            endtime = endhour+0.5
+        new = True
+        for period in self.data.period[day]:
+            p_start = period[0]
+            p_end = period[1]
+            if p_start <= starttime <= p_end:
+                new = False
+                if endtime > p_end:
+                    period[1] = endtime
+                else:
+                    break
+            elif p_start <= endtime <= p_end:
+                new = False
+                if starttime < p_start:
+                    period[0] = starttime
+                else:
+                    break
+        if new:
+            self.data.period[day].append([starttime,endtime])
+            self.data.period[day].sort()
+
+        self.master.switch_frame(PeriodPage,self.data)
+class DeletePeriodButton(Button):
+    def __init__(self,master,data,day):
+        super().__init__(master)
+        self["command"] = self.delete
+        self["text"] = "delete"
+        self.data = data
+        self.day = day
+    def delete(self):
+        self.data.period[self.day] = []
+        self.master.master.master.switch_frame(PeriodPage,self.data)
+
+
+
+
+
 
 
 
@@ -888,5 +981,21 @@ t3 = Task("c",2,2,[7,21])
 all = AllTasks([t1,t2,t3])
 f = FinishedTasks([])
 data = Data(all,f)
+"""
+for i in range(100):
+    name = "".join(random.choice(string.ascii_letters + string.digits) for x in range(10))
+    duration = random.randint(1,10000)
+    t = Task(name,duration,1,[5,5])
+    data.alltasks.add(t)
+now = time.process_time()
+data.alltasks.sort("name")
+end = time.process_time()
+print("sort by rbt:%f" %(end - now))
+now = time.process_time()
+data.alltasks.sort("duration")
+end = time.process_time()
+print("sort by dict:%f" %(end - now))
+
+"""
 app = main(data)
 app.mainloop()
