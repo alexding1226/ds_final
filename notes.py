@@ -6,16 +6,18 @@ import tkinter
 class Notes(tkinter.Tk):
     def __init__(self, tasks=None):
         super().__init__()
-        self.bgColor = ["RoyalBlue","DarkSlateBlue", "DarkMagenta"]
+        self.bgColor = ["RoyalBlue","DarkSlateBlue", "DarkMagenta", "Teal", "Indigo", "PaleVioletRed", "Crimson", "FireBrick","IndianRed", "Peru", "DarkGoldenRod", "OliveDrab", "LightSeaGreen", "CornflowerBlue", "DarkBlue", "DarkSlateBlue"]
 
         if not tasks:
             self.tasks = []
             task1 = tkinter.Label(self, text="Today's NOTES", bg="white", fg="tomato", pady=20, font=("Times",23))
             task1.pack(side=tkinter.TOP, fill=tkinter.X)
     
-        self.taskCreate = tkinter.Text(self, height=3, bg="DarkCyan", fg="white")
+        self.taskCreate = tkinter.Text(self, height=1, bg="DarkCyan", fg="white")
         self.taskCreate.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         self.taskCreate.focus_set()
+        self.instru = tkinter.Label(self, text="Fill your tasks below and press ENTER. (Maximum 40 words, 16 tasks)", fg="black")
+        self.instru.pack(side=tkinter.BOTTOM)
         
         self.bind('<Return>', self.addTask)
 
@@ -54,7 +56,7 @@ class Notes(tkinter.Tk):
 
 
 if __name__ == "__main__":
-    #saved tasks
+    # Saved tasks in local
     try:
         read = open("notes.txt","r")
     except FileNotFoundError:
@@ -63,15 +65,17 @@ if __name__ == "__main__":
         read=open("notes.txt","r")
         
     notes_lst=[]
-    for line in readfile:
+    for line in read:
         line=line.strip()
         notes_lst.append(line)
     
     notes = Notes(notes_lst)
     notes.title("NOTES")
+    # Please modify the windows size
     notes.geometry("700x500")
     notes.protocol("WM_DELETE_WINDOW", notes.closing)
     notes.mainloop()
     
+
 
 
