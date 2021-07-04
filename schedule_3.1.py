@@ -67,10 +67,10 @@ P = [p1,p2,p3,p4,p5,p6]
 # 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
 
 # insufficient time detection : 
-def Detect(): # won't change task_item   #### need to be mod
+def Detect(data_task_list): # won't change task_item   #### need to be mod
     amount_task = 0
     amount_period = 0
-    task_list = list(data.list(T).sort(type = "deadline"))
+    task_list = list(data.list(data_task_list).sort(type = "deadline"))
     period_list = list(data.list(P).sort(type = "time"))
     current_task = 1
     current_period = 1
@@ -97,8 +97,9 @@ def Detect(): # won't change task_item   #### need to be mod
 
 class schedule_3: # 先delay，expire就把min_lentgh刪掉
     
-    def __init__(self): 
-        self.task_list = data.list(T)
+    def __init__(self,data_task_list): 
+        self.task_list = data.list(data_task_list)
+        self.data_task_list = data_task_list
         L = []
         for i in P:
             L.append(i.copy())
@@ -116,7 +117,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
         return True
     
     def ExpirationHandling(self,task_item_with_problem):
-        S_new = schedule_3()
+        S_new = schedule_3(self.data_task_list)
         index = S_new.task_list.index(task_item_with_problem)
         if self.flag == 1: # type
             S_new.flag = 1
@@ -145,7 +146,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                     break
             # 找出前面空著的時間，把那項分拆
             #S_new.task_list.delete(task_item_with_problem)
-            T.remove(task_item_with_problem)
+            self.data_task_list.remove(task_item_with_problem)
             t = task_item_with_problem.copy()
             t.min_length = 0
             t.type = "special2" ################################################################################################
@@ -157,12 +158,12 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                     if p_duration  <= current_duration_left:
                         t.duration = p_duration
                         #S_new.task_list.add(t.copy())
-                        T.append(t.copy())
+                        self.data_task_list.append(t.copy())
                         current_duration_left = current_duration_left - p_duration
                     else:
                         t.duration = current_duration_left
                         #S_new.task_list.add(t)
-                        T.append(t)
+                        self.data_task_list.append(t)
                         current_duration_left = 0
                 else:
                     break
@@ -239,7 +240,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
         return schedule
 
 if __name__ == "__main__": # testing
-    S = schedule_3()
-    print(Detect())
+    S = schedule_3(T)
+    print(Detect(T))
     print(S.Schedule())
 
