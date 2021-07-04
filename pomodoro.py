@@ -1,59 +1,61 @@
 from tkinter import *
 import tkinter
+from PIL import Image, ImageTk
 
 class Application(Frame):
     def __init__(self,master):
         super(Application, self).__init__(master)
-        self.pack(anchor=CENTER,expand=1,fill=BOTH)
         self.createWidgets()
+        self.pack(side=TOP)
+        
         self.timer = None
         self.conti = 0
         self._paused = False
         self.timerToStart = 25
         
-
-
     def createWidgets(self):
-        #self.text = StringVar()
-        #self.text.set("Work")
+
         self.timerVariable = StringVar()
         self.timerVariable.set(None)
-        self.type = Label(self, text="Work", bg="white", fg="pink", font=('Arial', 24))
-        self.type.grid(row=0, column=0)
-        self.firstButtonFrame = Frame(self)
+        self.canvas = Canvas(bg="#ffbc92", highlightthickness=0)
         
-        self.time = Scale(self.firstButtonFrame, label='Time-period', from_=25, to=55, orient=HORIZONTAL, length=200, showvalue=0,tickinterval=2, resolution=1)
-        self.time.grid(row=1, column=0)
-        self.b1=Button(self.firstButtonFrame,text='Set',command=self.set1)
-        self.b1.grid(row=1, column=1)
+        self.tomatoImg = PhotoImage(file="2tomato.png")
+        # Here need to be revise for the windows xy
+        self.canvas.create_image(145, 114, image=self.tomatoImg)
+        # Here need to be revise for windows y+11
+        self.timerLabel = self.canvas.create_text(145, 125, text="00:00", fill="white", font=('Arial', 112))
+        
+        self.type = Label(self, text="Work", bg="#ffbc92", fg="sienna", font=('Arial', 40))
+        self.type.grid(row=0, column=0, sticky="ewns")
+        
+        self.canvas.pack(side=TOP)
+        
+        self.frame1 = Frame(self,bg="#ffbc92")
+        
+        self.time = Scale(self.frame1, label='Time-period', from_=25, to=55, orient=HORIZONTAL, length=200, showvalue=0,tickinterval=10, resolution=1, bg="#ffbc92")
+        self.time.grid(row=2, column=0)
+        self.b1=Button(self.frame1,text='Set',command=self.set1, bg="#ffbc92")
+        self.b1.grid(row=2, column=1)
         
         
-        self.firstButtonFrame.grid(row=1, column=0)
+        self.frame1.grid(sticky="ewns")
         
-        self.timerLabel = Label(self,text="00:00",font=("Cantrell",70),bg="white")
-        self.timerLabel.grid(row=2, column=0)
+        
 
-        self.secondButtonFrame = Frame(self,bg="white")
-        self.startButton = Button(self.secondButtonFrame,text="Start",fg="RED",activebackground="green",activeforeground="white",width="8",height="2",font=('Arial',11),command=self.startTime)
-        self.startButton.grid(row=3, column=1)
+        self.frame2 = Frame(self,bg="#ffbc92")
+        self.startButton = Button(self.frame2,text="Start",fg="RED",activeforeground="BlanchedAlmond",width="8",height="2",font=('Arial',11),command=self.startTime)
+        self.startButton.grid(row=4, column=1, sticky="ewns")
 
-        self.stopButton = Button(self.secondButtonFrame,text="Stop",fg="yellow",bg="red",width="8",height="2",activebackground="pink",activeforeground="white",font=('Arial',11),command=self.stopTime)
-        self.stopButton.grid(row=3, column=2)
+        self.stopButton = Button(self.frame2,text="Stop",fg="green",background = 'BlanchedAlmond',width="8",height="2",activebackground="#ffbc92",activeforeground="#ffbc92",font=('Arial',11),command=self.stopTime)
+        self.stopButton.grid(row=4, column=2, sticky="ewns")
 
-        self.resetButton = Button(self.secondButtonFrame,text="Reset",fg="black",width="8",height="2",font=('Arial',11),command=self.resetTime)
-        self.resetButton.grid(row=3, column=3)
-        self.secondButtonFrame.grid(row=3, column=0)
+        self.resetButton = Button(self.frame2,text="Reset",fg="black",width="8",height="2",font=('Arial',11),command=self.resetTime)
+        self.resetButton.grid(row=4, column=3, sticky="ewns")
+        self.frame2.grid(columnspan=5)
 
     
     def set1(self):
         self.timerToStart = self.time.get()
-        
-    def startClock(self):
-        
-        if self.timer is not None:
-            self.master.after_cancel(self.timer)
-        self._paused = False
-        self.countdown(self.timerToStart*60)
 
 
     def startTime(self):
@@ -89,8 +91,7 @@ class Application(Frame):
                 self.timer = self.master.after(1000,self.countdown,timeInSeconds,False)
             else:
                 mins,secs = divmod(timeInSeconds,60)
-                timeformat = "{0:02d}:{1:02d}".format(mins,secs)
-                app.timerLabel.configure(text=timeformat)
+                self.canvas.itemconfig(self.timerLabel, text=f"{mins}:{secs}")
                 self.timer = self.master.after(1000,self.countdown,timeInSeconds-1,False)
         else:
             self.conti += 1
@@ -100,8 +101,13 @@ class Application(Frame):
 if __name__ == '__main__':
     root = Tk()
     root.title("Pomodoro Timer")
-    root.resizable(0,0)
+    # Here need to be revise for the windows size
+    root.geometry("700x500")
+    root.configure(bg="#ffbc92")
     app = Application(root)
-    app.configure(background="white")
+    app.configure(background="#ffbc92")
     root.mainloop()
+
+
+
 
