@@ -91,7 +91,7 @@ class period_item:
         else:
             return False
 
-'''
+''''''
 class list: ## 可以廢掉
     def __init__(self, list_of_tasks):
         self.list = list_of_tasks
@@ -135,9 +135,9 @@ class list: ## 可以廢掉
     
     def get(self,index):
         return self.list[index]
-'''
+''''''
 
-class list(List): ## 可以廢掉
+class my_list(List): ## 可以廢掉
     def __init__(self, list_item):
         super().__init__(list_item)
     '''     
@@ -180,8 +180,6 @@ class list(List): ## 可以廢掉
     
     def Peek(self):
         return self.list[0]
-
-import json
 
 if __name__ == "__main__": #testing
     
