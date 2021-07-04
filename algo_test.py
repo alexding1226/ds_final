@@ -17,7 +17,7 @@ import DataFormat as data
 # task : name, duration, importance, deadline_date, deadline_time, min_length, type, non_consecutive_type
 # period : date, begin time, endd time
 
-''''''
+'''
 t1 = data.task_item("B",3,1,2,24,1,"exercise",["academy"])
 t3 = data.task_item("A",3,1,1,24,1,"academy",[])
 t2 = data.task_item("C",5,2,2,24,1,"academy",[])
@@ -30,7 +30,7 @@ p2 = data.period_item(2,9,12)
 p5 = data.period_item(2,13,16)
 p3 = data.period_item(3,10,15)
 P = [p1,p2,p3,p4,p5]
-''''''
+'''
 
 '''
 t1 = data.task_item("B",3,1,2,24,1,"exercise",["academy"])
@@ -46,6 +46,22 @@ p2 = data.period_item(2,9,12)
 p3 = data.period_item(3,10,15)
 P = [p1,p2,p3]
 '''
+
+''''''#言鼎
+t1 = data.task_item("B",3,1,3,24,1,"exercise",["academy"])
+t3 = data.task_item("A",3,1,1,24,1,"academy",[])
+t2 = data.task_item("C",3,2,2,24,1,"academy",[])
+#t4 = data.task_item("D",1,1,4,24,1,"exercise",[])
+T = [t1,t2,t3]
+
+p1 = data.period_item(1,7,9)
+p4 = data.period_item(1,10,11)
+p6 = data.period_item(1,13,15)
+p2 = data.period_item(2,9,10)
+p5 = data.period_item(2,13,13)
+p3 = data.period_item(3,10,13)
+P = [p1,p2,p3,p4,p5,p6]
+''''''
 
 ## Algorithm, abstractized : 
 # 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
@@ -108,11 +124,12 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                 S_new.task_list.get(index).type = "special" ## WATCHOUT
                 return S_new.Schedule()
             else :
-                print("index < 1 @ expiration handling")
-                return -1
+                self.flag = self.flag +1
+                ##print("index < 1 @ expiration handling")
+                ##return -1
         
-        elif self.flag == 2: # min_length
-            S_new.flag = 2
+        if self.flag == 2: # min_length
+            S_new.flag = 0
             empty_period = []
             for i in range(self.period_list.len()):
                 p = self.period_list.get(i)
@@ -127,7 +144,8 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                 else:
                     break
             # 找出前面空著的時間，把那項分拆
-            S_new.task_list.delete(task_item_with_problem)
+            #S_new.task_list.delete(task_item_with_problem)
+            T.remove(task_item_with_problem)
             t = task_item_with_problem.copy()
             t.min_length = 0
             t.type = "special2" ################################################################################################
@@ -138,14 +156,17 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                     t.importance = t.importance + 0.001
                     if p_duration  <= current_duration_left:
                         t.duration = p_duration
-                        S_new.task_list.add(t.copy())
+                        #S_new.task_list.add(t.copy())
+                        T.append(t.copy())
                         current_duration_left = current_duration_left - p_duration
                     else:
                         t.duration = current_duration_left
-                        S_new.task_list.add(t)
+                        #S_new.task_list.add(t)
+                        T.append(t)
                         current_duration_left = 0
                 else:
                     break
+            S_new.task_list = data.list(T)
             S_new.task_list.sort(type = "deadline")
             return S_new.Schedule()
 
@@ -209,10 +230,11 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
                 
             else: 
                 current_period = current_period +1
-              
-            current_date = self.period_list.get(current_period-1).date
-            current_time = self.period_list.get(current_period-1).begin
-            p_duration = self.period_list.get(current_period-1).end - current_time 
+            
+            if current_period <= self.period_list.len():
+                current_date = self.period_list.get(current_period-1).date
+                current_time = self.period_list.get(current_period-1).begin
+                p_duration = self.period_list.get(current_period-1).end - current_time 
 
         return schedule
 
