@@ -32,22 +32,25 @@ p3 = data.period_item(3,10,15)
 P = [p1,p2,p3,p4,p5]
 '''
 
-'''
-t1 = data.task_item("B",3,1,2,24,1,"exercise",["academy"])
-t3 = data.task_item("A",3,1,1,24,1,"academy",[])
-t2 = data.task_item("C",3,2,2,24,1,"academy",[])
-t4 = data.task_item("D",1,1,4,24,1,"exercise",[])
-T = [t1,t2,t3,t4]
+''''''
+T =[]
+T.append(data.task_item("C",1,1,2,12,0,1,"exercise",["exercise"]))
+T.append(data.task_item("C",1,1,2,24,1,1,"exercise",["exercise"]))
+T.append(data.task_item("C",1,1,3,12,2,1,"exercise",["exercise"]))
+T.append(data.task_item("A",2,1,1,12,0,1,"academy",[]))
+T.append(data.task_item("A",2,1,1,24,1,1,"academy",[]))
+T.append(data.task_item("A",1,1,2,24,2,1,"academy",[]))
+T.append(data.task_item("D",2,1,4,24,0,1,"academy",[]))
 
-p1 = data.period_item(1,9,15)
-#p4 = data.period_item(1,13,15)
-p2 = data.period_item(2,9,12)
-#p5 = data.period_item(2,13,16)
+p1 = data.period_item(1,9,12)
+p4 = data.period_item(1,13,14)
+p2 = data.period_item(2,9,13)
+p5 = data.period_item(2,15,16)
 p3 = data.period_item(3,10,15)
-P = [p1,p2,p3]
-'''
+P = [p1,p2,p3,p5,p4]
+''''''
 
-''''''#言鼎
+'''#言鼎
 t1 = data.task_item("B",3,1,3,24,1,"exercise",["academy"])
 t3 = data.task_item("A",3,1,1,24,1,"academy",[])
 t2 = data.task_item("C",3,2,2,24,1,"academy",[])
@@ -61,7 +64,7 @@ p2 = data.period_item(2,9,10)
 p5 = data.period_item(2,13,13)
 p3 = data.period_item(3,10,13)
 P = [p1,p2,p3,p4,p5,p6]
-''''''
+'''
 
 ## Algorithm, abstractized : 
 # 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
@@ -102,7 +105,9 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
     
     def __init__(self,data_task_list,data_period_list): 
         self.data_task_list = data_task_list
+        self.data_task_list.sort()
         self.data_period_list = data_period_list
+        self.data_period_list.sort()
         
         self.task_list = data.my_list(data_task_list)
         self.period_list = data.my_list([])
@@ -127,6 +132,7 @@ class schedule_3: # 先delay，expire就把min_lentgh刪掉
         if self.flag == 1: # type
             S_new.flag = 1
             if index >= 1:
+                S_new.data_task_list[index].type = "special"
                 S_new.task_list[index].type = "special" ## WATCHOUT
                 return S_new.Schedule()
             else :

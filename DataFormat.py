@@ -1,7 +1,7 @@
 from typing import List
 
 class task_item:
-    def __init__(self, name, duration, importance, deadline_date, deadline_time, min_length = 1,
+    def __init__(self, name, duration, importance, deadline_date, deadline_time, id, min_length = 1,
             type = "None", non_consecutive_type = []) :
         self.name = name # str
         self.duration = duration # int, every 30 min or 10 min 
@@ -11,6 +11,7 @@ class task_item:
         self.type = type # str
         self.min_length = min_length # int, every 30 min or 10 min 
         self.non_consecutive_type = non_consecutive_type # list of types that can't take place right after this task
+        self.id = id # to identify tasks with same properties (e.g. splitted tasks)
         #self.partition_num = [1,duration//min_length]
         #self.partition = [duration]
         #for i in range():
@@ -28,7 +29,8 @@ class task_item:
             return False
 
     def __eq__(self, other: object) -> bool:
-        if (self.deadline_date, self.deadline_time, self.importance) == (other.deadline_date, other.deadline_time, other.importance):
+        if (self.deadline_date, self.deadline_time, self.importance, self.name, self.id) == \
+                (other.deadline_date, other.deadline_time, other.importance, other.name, other.id):
             return True
         else:
             return False
