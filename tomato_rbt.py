@@ -112,7 +112,7 @@ class Data():
         #self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
         #self.schedule[1][0].whentodo = [7,2,10]
         self.schedule = []
-        self.period = {"Monday":[[9,15],[20,24]],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[[21.5,24]]}
+        self.period = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
     def finished(self,task):
         self.alltasks.delete(task)
         self.finishtasks.add(task)
@@ -131,8 +131,10 @@ class Data():
             days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
             today_weekday = days[datetime.datetime.today().weekday()]
             now =  datetime.datetime.now()
-            now_hour = now.hour
-            now_minute = now.minute
+            #now_hour = now.hour
+            #now_minute = now.minute
+            now_hour = 9
+            now_minute = 0
             taskslist = list(self.alltasks.tasks.values())
             today = datetime.datetime.today().date()
             toalgo_task = []
@@ -731,8 +733,10 @@ class TaskFrame(Frame):
             starttime_min = 0
         starttime_hour = task[1]//1
         now =  datetime.datetime.now()
-        now_hour = now.hour
-        now_minute = now.minute
+        #now_hour = now.hour
+        #now_minute = now.minute
+        now_hour = 9
+        now_minute = 0
         if now_hour < starttime_hour:
             done = False
             doing = False
