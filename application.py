@@ -12,7 +12,8 @@ class PomodoroPage(Frame):
         self.conti = 0
         self._paused = False
         self.timerToStart = 25
-        
+
+
     def createWidgets(self):
         self.timerVariable = StringVar()
         self.timerVariable.set(None)
@@ -66,16 +67,16 @@ class PomodoroPage(Frame):
             self._paused = True
             
     def resetTime(self):
-        self.after_cancel(self.timer)
+        self.master.after_cancel(self.timer)
         self.timer = None
         self._paused = False
         if self.conti%2 == 0:
             self.type.config(text="Work")
-            self.type.grid(row=0, column=0)
+            self.type.pack()
             self.timerToStart = self.time.get()
         else:
             self.type.config(text="Break")
-            self.type.grid(row=0, column=0)
+            self.type.pack()
             self.timerToStart = int(0.1*(self.time.get()))
         self.countdown(self.timerToStart * 60)
         self._paused = True
@@ -86,11 +87,11 @@ class PomodoroPage(Frame):
             if start:
                 self._starttime = timeInSeconds
             if self._paused:
-                self.timer = self.after(1000,self.countdown,timeInSeconds,False)
+                self.timer = self.master.after(1000,self.countdown,timeInSeconds,False)
             else:
                 mins,secs = divmod(timeInSeconds,60)
                 self.canvas.itemconfig(self.timerLabel, text=f"{mins}:{secs}")
-                self.timer = self.after(1000,self.countdown,timeInSeconds-1,False)
+                self.timer = self.master.after(1000,self.countdown,timeInSeconds-1,False)
         else:
             self.conti += 1
             self.resetTime()
