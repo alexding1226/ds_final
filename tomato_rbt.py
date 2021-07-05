@@ -189,7 +189,8 @@ def pomodoro():
     global pomodoro_frame
     top = Toplevel()
     top.title("pomodoro")
-    top.geometry("700x500")
+    top.geometry("500x500")
+    top.configure(bg="#ffbc92")
     pomodoro_frame = application.PomodoroPage(top)
     pomodoro_frame.pack()
 class StartPage(Frame):
