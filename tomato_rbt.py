@@ -10,7 +10,7 @@ import tkinter.ttk as ttk
 from typing import Pattern
 from tkcalendar import Calendar
 from tkinter import messagebox
-import red_black_tree as rbt
+#import red_black_tree as rbt
 import random
 import string
 import application
@@ -19,7 +19,7 @@ import schedule2
 import DataFormat
 
 class Task():
-    def __init__(self,name,duration,importance,date,type = "study",successive = False) :
+    def __init__(self,name,duration,importance,date,type = "工作",successive = False) :
         self.name = name
         self.duration = duration
         self.importance = importance
@@ -96,23 +96,22 @@ class FinishedTasks():
             return self.tasks
     def delete(self,task):
         self.tasks.remove(task)
-
 class Data():
     def __init__(self,all,finished) :
         self.clock_time = 25
         self.alltasks = all
-        self.types = ["study","exercise","homework"]
+        self.types = ["工作","運動","生活"]
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
         #self.today = self.alltasks.today
         self.all_color = [["deep sky blue","light sky blue"],["deep pink","pink"],["green2","palegreen1"],
                             ["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
         self.cand_color = [["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
-        self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":["deep pink","pink"],"homework":["green2","palegreen1"]}
+        self.typecolor = {"工作":["deep sky blue","light sky blue"],"運動":["deep pink","pink"],"生活":["green2","palegreen1"]}
         self.finishtasks =finished
         #self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
         #self.schedule[1][0].whentodo = [7,2,10]
         self.schedule = []
-        self.period = {"Monday":[[9,15],[20,24]],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[[21.5,24]]}
+        self.period = {"Monday":[[9,12],[22,23]],"Tuesday":[[10,12],[13,16]],"Wednesday":[[10,12],[13,16]],"Thursday":[[10,12]],"Friday":[],"Saturday":[],"Sunday":[]}
     def finished(self,task):
         self.alltasks.delete(task)
         self.finishtasks.add(task)
@@ -131,8 +130,10 @@ class Data():
             days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
             today_weekday = days[datetime.datetime.today().weekday()]
             now =  datetime.datetime.now()
-            now_hour = now.hour
-            now_minute = now.minute
+            #now_hour = now.hour
+            #now_minute = now.minute
+            now_hour = 8
+            now_minute = 0
             taskslist = list(self.alltasks.tasks.values())
             today = datetime.datetime.today().date()
             toalgo_task = []
@@ -702,7 +703,8 @@ class TodayFrame(VerticalScrolledFrame):
         self.tasks = data.schedule[0]
         now = datetime.datetime.now()
         self.now = now
-        self.now_hm = [now.hour,now.minute]
+        #self.now_hm = [now.hour,now.minute]
+        self.now_hm = [8,0]
         Label(self.interior,text="today:",font=('Helvetica', 20, ITALIC)).pack(side = "top",anchor=W,padx=30)
         if len(self.tasks) == 0:
             l = Label(self.interior,text="today has no work",width=50)
@@ -731,8 +733,10 @@ class TaskFrame(Frame):
             starttime_min = 0
         starttime_hour = task[1]//1
         now =  datetime.datetime.now()
-        now_hour = now.hour
-        now_minute = now.minute
+        #now_hour = now.hour
+        #now_minute = now.minute
+        now_hour = 8
+        now_minute = 0
         if now_hour < starttime_hour:
             done = False
             doing = False
@@ -825,7 +829,6 @@ class TaskFrame(Frame):
         temp = 0
         for task in self.data.schedule[0]:
             if task[1] == self.task[1]:
-                n = color
                 task = task + (color,)
                 self.data.schedule[0][temp] = task
                 break
@@ -845,8 +848,10 @@ class RestFrame(Frame):
             starttime_min = 0
         starttime_hour = starttime // 1
         now =  datetime.datetime.now()
-        now_hour = now.hour
-        now_minute = now.minute
+        #now_hour = now.hour
+        #now_minute = now.minute
+        now_hour = 8
+        now_minute = 0
         if now_hour < starttime_hour:
             done = False
             doing = False
@@ -1079,11 +1084,11 @@ class DeletePeriodButton(Button):
         self.data.period[self.day] = []
         self.master.master.master.switch_frame(PeriodPage,self.data)
 
-        
-t1 = Task("yazuka 7",2.5,3,[7,20])
-t2 = Task("ds final project",2,2,[8,30])
-t3 = Task("ds hw5",2,2,[7,21])
-all = AllTasks([])
+t1 = Task("錄資結影片",1,3,[7,5],"工作")
+t2 = Task("複習DS",3,4,[7,6],"工作")
+t3 = Task("跑步",0.5,2,[7,7],"運動")
+t4 = Task("整理演算法",2,5,[7,5],"工作")
+all = AllTasks([t1,t2,t3,t4])
 f = FinishedTasks([])
 data = Data(all,f)
 
