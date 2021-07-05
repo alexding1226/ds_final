@@ -23,23 +23,21 @@ class Task():
         self.name = name
         self.duration = duration
         self.importance = importance
-        #self.deadline = deadline
         self.type = type
         self.successive = successive
         self.date = date
-        self.finished = False
         self.time_finished = 0
 class AllTasks():
     def __init__(self,tasks) :
         self.tasks = dict()
         for task in tasks:
             self.tasks[task.name] = task
-        self.rbt = rbt.RBTree()
-        for task in tasks:
-            self.rbt.insert(key=task.name,data=task)
+        #self.rbt = rbt.RBTree()
+        #for task in tasks:
+        #    self.rbt.insert(key=task.name,data=task)
     def add(self,task):
         self.tasks[task.name] = task
-        self.rbt.insert(key=task.name,data = task)
+        #self.rbt.insert(key=task.name,data = task)
     def sort(self ,type, rev = True):
         if type == "type":
             a = sorted(self.tasks.items(),key = lambda task:task[1].type ,reverse = not (rev))
@@ -50,15 +48,21 @@ class AllTasks():
         elif type == "duration":
             a = sorted(self.tasks.items(),key = lambda task:task[1].duration ,reverse =  (rev))
             return a
+            """
         elif type == "name":
             result = []
             for task in self.rbt:
-                result.append(task[1])
+                pass
             if not rev :
                 result.reverse()
             return result
+            """
+            
         elif type == "deadline":
             a = sorted(self.tasks.items(),key = lambda task:task[1].date ,reverse = not (rev))
+            return a
+        elif type == "name":
+            a = sorted(self.tasks.keys(),reverse = not (rev))
             return a
     """
     def algorithm(self):
@@ -68,7 +72,7 @@ class AllTasks():
     """
     def delete(self,task):
         del self.tasks[task.name]
-        self.rbt.delete(key=task.name)
+        #self.rbt.delete(key=task.name)
 class FinishedTasks():
     def __init__(self,tasks) :
         self.tasks = tasks
@@ -100,7 +104,9 @@ class Data():
         self.types = ["study","exercise","homework"]
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
         #self.today = self.alltasks.today
-        self.cand_color = [[],[],[],[]]
+        self.all_color = [["deep sky blue","light sky blue"],["deep pink","pink"],["green2","palegreen1"],
+                            ["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
+        self.cand_color = [["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
         self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":["deep pink","pink"],"homework":["green2","palegreen1"]}
         self.finishtasks =finished
         #self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
@@ -108,15 +114,17 @@ class Data():
         self.schedule = []
         self.period = {"Monday":[[9,15],[20,24]],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[[21.5,24]]}
     def finished(self,task):
+        self.alltasks.delete(task)
+        self.finishtasks.add(task)
+    def finished_part(self,task):
         task_in_all = self.alltasks.tasks[task[0]]
         if task_in_all.time_finished + task[2] - task[1] >= task_in_all.duration:
             self.alltasks.delete(task_in_all)
             self.finishtasks.add(task_in_all)
         else:
-            task_in_all.time_finished += task[2] - task[1]
+            task_in_all.time_finished += task[2] - task[1]        
     def add(self,task):
         self.alltasks.add(task)
-        print(self.alltasks.tasks)
 
     def scheduling(self):
         if len(self.alltasks.tasks)>0:
@@ -150,11 +158,22 @@ class Data():
                 for period in self.period[days[index]]:
                     toalgo_period.append(DataFormat.period_item(i+1,period[0],period[1]))
             algo = schedule2.schedule_3(toalgo_task,toalgo_period)
-            schedule = algo.Schedule()
-            for s in schedule:
-                s.sort(key = lambda task:task[1])
-            self.schedule = schedule
-            print(self.schedule)
+            if algo.Detect() == 0:
+                schedule = algo.Schedule()
+                for s in schedule:
+                    s.sort(key = lambda task:task[1])
+                self.schedule = schedule
+            else:
+                self.schedule = ["expire",algo.Detect()]
+        else:
+            self.schedule = ["no task"]
+    def addtype(self,type):
+        self.types.append(type)
+        type_color_index = random.randint(0,len(self.cand_color)-1)
+        type_color = self.cand_color.pop(type_color_index)
+        self.typecolor[type] = type_color
+        if len(self.cand_color) == 0:
+            self.cand_color = self.all_color
 
 
 
@@ -167,8 +186,6 @@ class main(Tk):
         self._frame = None
         self.geometry("1050x700")
         self.duration = 50
-        self.remaintime = self.duration
-        self.counting = False
         self.data = data
         change_frame = Frame(self)
         change_frame.pack(side="left",fill="y")
@@ -177,14 +194,25 @@ class main(Tk):
         Button(change_frame,text = "set period",command=lambda:self.switch_frame(PeriodPage,data)).grid(column=0,row=4,pady=15,padx=15,sticky=N)
         Button(change_frame,text="pomodoro",command=pomodoro).grid(column=0,row=5,pady=15,sticky=N)
         Button(change_frame,text="notes",command=lambda:self.switch_frame(notes.NotesPage,data)).grid(column=0,row=6,pady=15,sticky=N)
-        Button(change_frame,text="為你安排行程!",command= data.scheduling).grid(column=0,row = 7,pady=15,sticky=N)
+        Button(change_frame,text="為你安排行程!",command= self.scheduling).grid(column=0,row = 7,pady=15,sticky=N)
         self.switch_frame(AllTasksPage,data)
+    
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
         self._frame.pack(side = "left",fill = "both")
+    def scheduling(self):
+        self.data.scheduling()
+        if self.data.schedule[0] == "expire":
+            today = datetime.datetime.today()
+            days = datetime.timedelta(days=self.data.schedule[1]-1)
+            expireday = today + days
+            expiredate = [expireday.month,expireday.day]
+            messagebox.showwarning("expire","task expire at day %d/%d"%(expiredate[0],expiredate[1]))
+        elif self.data.schedule[0] == "no task":
+            messagebox.showinfo("no task","add a task first")
 def pomodoro():
     global pomodoro_frame
     top = Toplevel()
@@ -193,35 +221,7 @@ def pomodoro():
     top.configure(bg="#ffbc92")
     pomodoro_frame = application.PomodoroPage(top)
     pomodoro_frame.pack()
-class StartPage(Frame):
-    def __init__(self, master,data):
-        Frame.__init__(self, master)
-        Label(self, text="config", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
-        self.e_duration = Entry(self,width= 50 )
-        self.e_duration.insert(0,master.duration)
-        self.e_duration.pack()
-        self.confirm_button = Button(self,text="confirm",command=self.confirm_duration)
-        self.confirm_button.pack()
-    def confirm_duration(self):
-        self.master.duration = int(self.e_duration.get())
-        self.master.remaintime = int(self.e_duration.get())
-class Tomato(Frame):
-    def __init__(self,master,data):
-        Frame.__init__(self, master)
-        Label(self, text="tomato clock", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
-        self.remaintime = Label(self,text=str(master.remaintime))
-        self.remaintime.pack()
-        self.remaintime.after(1000,self.update)
-        self.start_button = Button(self,text="start",command=self.count_down)
-        if master.counting:
-            self.start_button["state"] = DISABLED
-        self.start_button.pack()
-    def update(self) :
-        self.remaintime["text"]=str(self.master.remaintime)
-        self.remaintime.after(1000,self.update)
-    def count_down(self):
-        self.start_button["state"] = DISABLED
-        self.master.count_down()
+
 #from https://stackoverflow.com/questions/16188420/tkinter-scrollbar-for-frame
 class VerticalScrolledFrame(Frame):
     """A pure Tkinter scrollable frame that actually works!
@@ -347,7 +347,7 @@ class AllTasksPage(Frame):
             delete_button["bg"] = color
             delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
-        self.add_task_button = Button(self,text="+",command=self.add_task)
+        self.add_task_button = Button(self,text="add task",command=self.add_task,font=('Corbel',16))
         self.add_task_button.grid(row=30,column=0,pady=30)
         sort_combobox = ttk.Combobox(self.frame_config,values=["name","importance","duration","deadline","type"],state="readonly",width=10)
         sort_combobox.current(0)
@@ -476,14 +476,13 @@ class AllTasksPage(Frame):
         ymd = cal.get_date().split("/")
         if name.get() not in self.data.alltasks.tasks:
             task = Task(name.get(),int(dur.get())/2,imp.get(),[int(ymd[1]),int(ymd[2])],type.get())
-            color = self.data.typecolor[task.type][0]
             self.data.alltasks.add(task)
             if type.get() not in self.data.types:
-                self.data.types.append(type.get())
+                self.data.addtype(type.get())
             color = self.data.typecolor[task.type][0]
             frame.destroy()
             self.confirm_button.destroy()
-            self.add_task_button = Button(self,text="+",command=self.add_task)
+            self.add_task_button = Button(self,text="add task",command=self.add_task,font=('Corbel',16))
             self.add_task_button.grid(row=30,column=0,pady=30)
             task_frame =Frame(self.frame_tasks.interior,bg=color)
             task_frame.grid(row = len(self.data.alltasks.tasks)-1,column = 0, pady=5,sticky=W)
@@ -548,7 +547,7 @@ class AllTasksPage(Frame):
             name = name.get()
             frame.destroy()
             self.confirm_button.destroy()
-            self.add_task_button = Button(self,text="+",command=self.add_task)
+            self.add_task_button = Button(self,text="add task",command=self.add_task,font=('Corbel',16))
             self.add_task_button.grid(row=30,column=0,pady=30)
             messagebox.showwarning("Error","Name \"" + name + "\" already exist")
 class FinishButton(Button):
@@ -650,7 +649,7 @@ class TaskChangeButton(Button):
             self.task.duration = int(self.duration.get())/2
             self.task.type = self.type.get()
             if self.task.type not in self.data.types:
-                self.data.types.append(self.task.type)
+                self.data.addtype(self.task.type)
             ymd = self.cal.get_date().split("/")
             self.task.date = [int(ymd[1]),int(ymd[2])]
             self.data.alltasks.add(self.task)
@@ -687,10 +686,14 @@ class TaskChangeButton(Button):
 class SchedulePage(Frame):
     def __init__(self,master,data):
         Frame.__init__(self,master)
-        todayframe = TodayFrame(self,data)
-        todayframe.pack(side="left")
-        scheduleframe = ScheduleFrame(self,data)
-        scheduleframe.pack(side="left")
+        self.data = data
+        if self.data.schedule == [] :
+            Label(self,text="push the buttom \"為你安排行程\" at left first").pack()
+        else:
+            todayframe = TodayFrame(self,data)
+            todayframe.pack(side="left")
+            scheduleframe = ScheduleFrame(self,data)
+            scheduleframe.pack(side="left")
 class TodayFrame(VerticalScrolledFrame):
     def __init__(self,master,data):
         VerticalScrolledFrame.__init__(self, master,700,500)
@@ -828,7 +831,7 @@ class TaskFrame(Frame):
                 break
             temp += 1
         self.check_done.config(state=DISABLED)
-        self.data.finished(self.task)
+        self.data.finished_part(self.task)
         self.master.master.master.master.master.switch_frame(SchedulePage,data)
 class RestFrame(Frame):
     def __init__(self,master,data,duration,starttime):
@@ -1022,6 +1025,9 @@ class PeriodPage(Frame):
         try:
             starthour = int(self.starthour.get())
             endhour = int(self.endhour.get())
+            if starthour > 24 or endhour > 24 or starthour < 0 or endhour < 0:
+                messagebox.showwarning("Error","Please enter integer between 0 and 24")
+                return
         except:
             messagebox.showwarning("Error","Please enter integer")
             return
@@ -1049,6 +1055,13 @@ class PeriodPage(Frame):
                     period[0] = starttime
                 else:
                     break
+        if len(self.data.period[day]) >= 2:
+            former_period = self.data.period[day][0]
+            for period in self.data.period[day][1:]:
+                if former_period[1] >= period[0]:
+                    former_period[1] = period[1]
+                    self.data.period[day].remove(period)
+                former_period = period
         if new:
             self.data.period[day].append([starttime,endtime])
             self.data.period[day].sort()
@@ -1067,18 +1080,23 @@ class DeletePeriodButton(Button):
         self.master.master.master.switch_frame(PeriodPage,self.data)
 
         
-t1 = Task("a",2.5,3,[7,20])
-t2 = Task("b",2,2,[8,30])
-t3 = Task("c",2,2,[7,21])
+t1 = Task("yazuka 7",2.5,3,[7,20])
+t2 = Task("ds final project",2,2,[8,30])
+t3 = Task("ds hw5",2,2,[7,21])
 all = AllTasks([])
 f = FinishedTasks([])
 data = Data(all,f)
+
 """
-for i in range(100):
+now = time.process_time()
+for i in range(100000):
     name = "".join(random.choice(string.ascii_letters + string.digits) for x in range(10))
     duration = random.randint(1,10000)
     t = Task(name,duration,1,[5,5])
     data.alltasks.add(t)
+end = time.process_time()
+print("add by dict:%f" %(end - now))
+
 now = time.process_time()
 data.alltasks.sort("name")
 end = time.process_time()
@@ -1087,7 +1105,9 @@ now = time.process_time()
 data.alltasks.sort("duration")
 end = time.process_time()
 print("sort by dict:%f" %(end - now))
-
 """
+
+
+
 app = main(data)
 app.mainloop()
