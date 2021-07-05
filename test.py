@@ -1,6 +1,6 @@
 import algo
-import algo_Exp
-import DataFormat_Exp as data
+import Testing.algo_Exp as algo_Exp
+import Testing.DataFormat_Exp as data
 import timeit
 
 '''
@@ -17,8 +17,6 @@ p5 = data.period_item(2,13,16)
 p3 = data.period_item(3,10,15)
 P = [p1,p2,p3,p4,p5]
 '''
-
-
 
 
 '''
@@ -57,17 +55,17 @@ P = [p1,p2,p3,p4,p5,p6]
 '''
 
 def test():
-    S = algo.schedule_3(T,P)
+    S = algo.schedule(T,P)
     print(S.Detect())
     #print(S.Schedule())
-    S.Schedule()
+    print(S.Schedule())
 
 def test2():
     S = algo_Exp.schedule_3(T,P)
     print(S.Detect())
     S.Schedule()
     
-''''''
+'''
 k = 450
 T =[]
 for i in range(2,k,2):
@@ -85,7 +83,7 @@ if __name__ == "__main__": # testing
         print("pop(0) :",timeit.timeit(stmt="test()", setup="from __main__ import test", number= 1))
         ##print("pop()  :",timeit.timeit(stmt="test2()", setup="from __main__ import test2", number= 5))
     
-'''
+''''''
 t2, p2, 30000
 pop(0) : 2.1528013
 pop()  : 2.0687255999999996

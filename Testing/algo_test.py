@@ -1,22 +1,27 @@
-import DataFormat_Exp as data
-# try using DataFormat_Exp, reversing the order or task_list (i.e. pop at end)
+import Testing.DataFormat_Exp as data
 
-class schedule_3:
+# total time insufficient warning should take plasce @ task adding section
+# that deals with the case that the sum of time of the first n task exceed the sum of time 
+# ... add up to the deadline of the n'th task
+# 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
+# 兩種 items 都會被 modified，所以需要 deepcopy
+
+class schedule:
     
-    def __init__(self,data_task_list,data_period_list): 
+    def __init__(self,data_task_list,data_period_list): # task_list should be reversely sorted
         self.data_task_list = data_task_list
-        self.data_task_list.sort(reverse = True)
+        ##self.data_task_list.sort()
         self.data_period_list = data_period_list
-        self.data_period_list.sort()
+        ##self.data_period_list.sort()
         
         self.task_list = data.my_list(data_task_list)
         self.period_list = data.my_list([])
         for i in data_period_list:
             self.period_list.append(i.copy())
         
-        self.flag = 0 # 先試忽略type，再試忽略min_length
-        self.task_list.sort(reverse = True)
-        self.period_list.sort()
+        self.flag = 0 
+        ##self.task_list.sort()
+        ##self.period_list.sort()
 
     def Detect(self): # insufficient time detection : # using built-in list
         amount_task = 0
@@ -60,20 +65,22 @@ class schedule_3:
         return True
     
     def ExpirationHandling(self,task_item_with_problem):
-        S_new = schedule_3(self.data_task_list,self.data_period_list)
+        S_new = schedule(self.data_task_list,self.data_period_list)
         index = S_new.task_list.index(task_item_with_problem)
         if self.flag == 1: # type
             S_new.flag = 1
-            if index >= 1:
+            #if index >= 1:
+            k = len(self.data_task_list)-1
+            if index < k:
                 S_new.data_task_list[index].type = "special"
-                S_new.task_list[index].type = "special" ## WATCHOUT
+                S_new.task_list[index].type = "special" ## Take Care
                 return S_new.Schedule()
             else :
                 self.flag = self.flag +1
                 ##print("index < 1 @ expiration handling")
                 ##return -1
         
-        if self.flag == 2: # min_length
+        if self.flag == 2: # min_length # for loop 可優化
             S_new.flag = 0
             empty_period = []
             for i in range(len(self.period_list)):
@@ -93,7 +100,7 @@ class schedule_3:
             self.data_task_list.remove(task_item_with_problem)
             t = task_item_with_problem.copy()
             t.min_length = 0
-            t.type = "special2" ################################################################################################
+            t.type = "special2" 
             current_duration_left = t.duration
             for p in empty_period:
                 if current_duration_left != 0:
@@ -111,8 +118,9 @@ class schedule_3:
                         current_duration_left = 0
                 else:
                     break
+            self.data_task_list.sort(reverse = True)
             S_new.task_list = data.my_list(self.data_task_list)
-            S_new.task_list.sort(reverse=True)
+            #S_new.task_list.sort()
             return S_new.Schedule()
 
         else:
@@ -135,16 +143,16 @@ class schedule_3:
             if len(schedule) < current_date:
                 schedule.append([]) 
                 
-            if self.task_list.Peek(reverse=True).type in current_non_consecutive:
-                if self.task_list.Swap(reverse=True):
+            if self.task_list.Peek(reverse=True).type in current_non_consecutive: ## 可優化，變成試試看從下一天排起
+                if self.task_list.Swap():
                     t_duration = self.task_list.Peek(reverse=True).duration
                 else:
-                    print("can't skip this, no other task left")
+                    ##print("can't skip this, no other task left")
                     current_non_consecutive = []
 
             if current_period > len(self.period_list):
-                print("task", self.task_list.Peek(reverse=True).name,"expires at day", current_date,"due to delay")
-                print("old schedule current state :",schedule)
+                ##print("task", self.task_list.Peek().name,"expires at day", current_date,"due to delay")
+                ##print("old schedule current state :",schedule)
                 self.flag = self.flag + 1
                 return self.ExpirationHandling(self.task_list.Peek(reverse=True))
 
@@ -154,8 +162,8 @@ class schedule_3:
                 current_time = current_time + t_duration
                 self.period_list[current_period-1].begin = current_time
                 if self.CheckExpire(self.task_list.Peek(reverse=True).deadline_date, self.task_list.Peek(reverse=True).deadline_time, current_date, current_time):
-                    print("task", self.task_list.Peek(reverse=True).name,"expires at day", current_date)
-                    print("old schedule current state :",schedule)
+                    ##print("task", self.task_list.Peek().name,"expires at day", current_date)
+                    ##print("old schedule current state :",schedule)
                     self.flag = self.flag + 1
                     return self.ExpirationHandling(self.task_list.Peek(reverse=True))
                 current_progress = 0

@@ -1,6 +1,6 @@
 import algo
-import algo_Exp
-import DataFormat_Exp as data
+import Testing.algo_test as algo_test
+import Testing.DataFormat_Exp as data
 import timeit
 import matplotlib.pyplot as mat
 import math
@@ -19,8 +19,6 @@ p5 = data.period_item(2,13,16)
 p3 = data.period_item(3,10,15)
 P = [p1,p2,p3,p4,p5]
 '''
-
-
 
 
 '''
@@ -59,14 +57,14 @@ P = [p1,p2,p3,p4,p5,p6]
 '''
 
 def test():
-    S = algo.schedule_3(T,P)
-    print(S.Detect())
+    S = algo.schedule(T,P)
+    S.Detect()
     #print(S.Schedule())
     S.Schedule()
 
 def test2():
-    S = algo_Exp.schedule_3(T,P)
-    print(S.Detect())
+    S = algo_test.schedule(T,P)
+    S.Detect()
     S.Schedule()
     
 ''''''
@@ -75,10 +73,9 @@ T =[]
 P =[]
 
 def DataGenerating(k):
-    for i in range(2,k+50,2):
+    for i in range(k+50,2,-2):
         T.append(data.task_item(chr(65+(i%26)),3,1,500,24,0,1,"test",[""]))
-
-    
+        
     for i in range(0,k+50):
         P.append(data.period_item(i,9,11))
     k = k + 50
@@ -90,10 +87,11 @@ if __name__ == "__main__": # testing
     #x = [50,100,150,200,250,300,350,400,450,500]
     #y = [0.0277,0.1136,0.2372,0.5006,0.9424,
     #        1.57,2.3888,3.3416,4.788,6.39]
+    
+    '''
     x = []
     y = []
     k = 0
-    
     for i in range(0,10):
         k = DataGenerating(k)
         print(k,":")
@@ -103,16 +101,43 @@ if __name__ == "__main__": # testing
         y.append(t)
     
     mat.plot(x,y)
+    '''
+    ''''''
+    x = []
+    y = []
+    k = 0
     
+    for i in range(0,10):
+        k = DataGenerating(k)
+        print(k,":")
+        t = timeit.timeit(stmt="test2()", setup="from __main__ import test2", number= 100)
+        print("test2",k, ":", "pop() :",t)
+        x.append(k)
+        y.append(t)
+    mat.plot(x,y)
+    ''''''
+
+
     a = []
     b = []
     for i in range(50,500,50):
         a.append(i)
         #b.append(y[0]*((i//50)^2)*math.log(i)/math.log(50))
-        b.append(y[0]*((i//50)^3))
+        #b.append(y[0]*((i/50)*(i/50)*(i/50)))
+        b.append(y[0]*((i/50)*(i/50)))
     mat.plot(a,b) 
-    
+
+    a = []
+    b = []
+    for i in range(50,500,50):
+        a.append(i)
+        b.append(y[0]*(i/50)*math.log(i)/math.log(50))
+        #b.append(y[0]*((i/50)*(i/50)*(i/50)))
+        #b.append(y[0]*((i/50)*(i/50)))
+    mat.plot(a,b) 
     mat.show()
+   
+    
     
 '''
 t2, p2, 30000
