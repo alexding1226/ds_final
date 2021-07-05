@@ -6,18 +6,9 @@ https://meet.google.com/qge-pwem-uun
  task_list 改成 dict ?  >  不能撞名字，但能解決 index()的問題
  不過ALGO要重新設計 for "length" feature
 
- 到底為什麼要有 class list, 直接用原生 list 就好，
- > 要替 task_item & period_item 加上 >, ==, <
-
-
- Change of the day
- singly linked list > task_list
-
-
  Task : 
  1. readme file, merge
  2. slides : 
-1)
 
 Demo Video : 12min 
 簡介

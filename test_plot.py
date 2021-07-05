@@ -3,6 +3,7 @@ import algo_Exp
 import DataFormat_Exp as data
 import timeit
 import matplotlib.pyplot as mat
+import math
 
 '''
 t1 = data.task_item("B",3,1,2,24,1,"exercise",["academy"])
@@ -72,14 +73,13 @@ def test2():
 
 T =[]
 P =[]
-    data.task_item()
 
 def DataGenerating(k):
-    for i in range(k+2,k+50,2):
-        T.append(data.task_item(chr(65+(i%26)),3,1,i,24,0,1,"test",[""]))
+    for i in range(2,k+50,2):
+        T.append(data.task_item(chr(65+(i%26)),3,1,500,24,0,1,"test",[""]))
 
     
-    for i in range(k,k+50):
+    for i in range(0,k+50):
         P.append(data.period_item(i,9,11))
     k = k + 50
     return k
@@ -87,17 +87,31 @@ def DataGenerating(k):
 ''''''
 
 if __name__ == "__main__": # testing
+    #x = [50,100,150,200,250,300,350,400,450,500]
+    #y = [0.0277,0.1136,0.2372,0.5006,0.9424,
+    #        1.57,2.3888,3.3416,4.788,6.39]
     x = []
     y = []
     k = 0
-    for i in range(0,8):
+    
+    for i in range(0,10):
         k = DataGenerating(k)
         print(k,":")
-        t = timeit.timeit(stmt="test()", setup="from __main__ import test", number= 1)
+        t = timeit.timeit(stmt="test()", setup="from __main__ import test", number= 100)
         print("test",k, ":", "pop(0) :",t)
         x.append(k)
         y.append(t)
+    
     mat.plot(x,y)
+    
+    a = []
+    b = []
+    for i in range(50,500,50):
+        a.append(i)
+        #b.append(y[0]*((i//50)^2)*math.log(i)/math.log(50))
+        b.append(y[0]*((i//50)^3))
+    mat.plot(a,b) 
+    
     mat.show()
     
 '''
