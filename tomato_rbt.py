@@ -130,8 +130,10 @@ class Data():
             days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
             today_weekday = days[datetime.datetime.today().weekday()]
             now =  datetime.datetime.now()
-            now_hour = now.hour
-            now_minute = now.minute
+            #now_hour = now.hour
+            #now_minute = now.minute
+            now_hour = 8
+            now_minute = 0
             taskslist = list(self.alltasks.tasks.values())
             today = datetime.datetime.today().date()
             toalgo_task = []
@@ -703,7 +705,8 @@ class TodayFrame(VerticalScrolledFrame):
         self.tasks = data.schedule[0]
         now = datetime.datetime.now()
         self.now = now
-        self.now_hm = [now.hour,now.minute]
+        #self.now_hm = [now.hour,now.minute]
+        self.now_hm = [8,0]
         Label(self.interior,text="today:",font=('Helvetica', 20, ITALIC)).pack(side = "top",anchor=W,padx=30)
         if len(self.tasks) == 0:
             l = Label(self.interior,text="today has no work",width=50)
@@ -732,8 +735,10 @@ class TaskFrame(Frame):
             starttime_min = 0
         starttime_hour = task[1]//1
         now =  datetime.datetime.now()
-        now_hour = now.hour
-        now_minute = now.minute
+        #now_hour = now.hour
+        #now_minute = now.minute
+        now_hour = 8
+        now_minute = 0
         if now_hour < starttime_hour:
             done = False
             doing = False
@@ -845,8 +850,10 @@ class RestFrame(Frame):
             starttime_min = 0
         starttime_hour = starttime // 1
         now =  datetime.datetime.now()
-        now_hour = now.hour
-        now_minute = now.minute
+        #now_hour = now.hour
+        #now_minute = now.minute
+        now_hour = 8
+        now_minute = 0
         if now_hour < starttime_hour:
             done = False
             doing = False
@@ -1081,8 +1088,12 @@ t1 = Task("錄資結影片",1,3,[7,5],"工作")
 t2 = Task("複習DS",3,4,[7,6],"工作")
 t3 = Task("跑步",0.5,2,[7,7],"運動")
 t4 = Task("整理演算法",2,5,[7,5],"工作")
+<<<<<<< HEAD
 t5 = Task("全聯買東西",1,2,[7,12],"生活")
 all = AllTasks([])
+=======
+all = AllTasks([t1,t2,t3,t4])
+>>>>>>> a9fd83003e3eccce306ae321472a9bf7b3f9dad3
 f = FinishedTasks([])
 data = Data(all,f)
 
