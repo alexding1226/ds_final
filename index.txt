@@ -15,9 +15,36 @@ second time : 9, 9, 9, 9.5, 9.9, 9.72 > ~9.5
 heap : 9.23, 8.93, 8.95, 9.06, 9.12 > ~9
 
 running time for k = 3000 :  
-list 44.8
+list 44.8, 42.85, 51,93, 45(timeit)
 heap 43.7
 
 conclusion : 
 1. no significant differance
 2. time complexity roughly O( n log n ) (very roughly)
+
+Result of new experiment : list.pop(0) vs. list.pop(), without all the print, using timeit
+Only Detect() : 
+pop(0) : 0.02742, 0.02571, 
+pop() : 0.03362, 0.03611
+
+Detect() + Schedule() : k = 30000
+testing data : 3000
+test 1 :
+pop(0) : 10.1918324
+pop()  : 14.4082238
+
+test 2 :
+pop(0) : 10.3539617
+pop()  : 11.114992100000002
+
+test 3 :
+pop(0) : 10.149806300000002
+pop()  : 11.3845003
+
+test 4 :
+pop(0) : 10.1690964
+pop()  : 11.149390100000005
+
+test 5 :
+pop(0) : 9.95534769999999
+pop()  : 11.115370200000001
