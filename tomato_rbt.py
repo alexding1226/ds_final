@@ -2,6 +2,7 @@ from calendar import month
 from re import T
 import time
 import datetime
+from datetime import date
 from tkinter import *
 from tkinter import font
 from tkinter.font import ITALIC
@@ -14,7 +15,8 @@ import random
 import string
 import application
 import notes
-
+import schedule2
+import DataFormat
 
 class Task():
     def __init__(self,name,duration,importance,date,type = "study",successive = False) :
@@ -25,7 +27,6 @@ class Task():
         self.type = type
         self.successive = successive
         self.date = date
-        self.whentodo = None #[month,day,period] #period = 1~48
         self.finished = False
         self.time_finished = 0
 class AllTasks():
@@ -36,7 +37,7 @@ class AllTasks():
         self.rbt = rbt.RBTree()
         for task in tasks:
             self.rbt.insert(key=task.name,data=task)
-    def add(self,task,test = False):
+    def add(self,task):
         self.tasks[task.name] = task
         self.rbt.insert(key=task.name,data = task)
     def sort(self ,type, rev = True):
@@ -59,10 +60,12 @@ class AllTasks():
         elif type == "deadline":
             a = sorted(self.tasks.items(),key = lambda task:task[1].date ,reverse = not (rev))
             return a
+    """
     def algorithm(self):
         self.today = [Task("a",0.5,3,[7,20]),Task("b",2,2,[8,30])]
         self.today[0].whentodo = [7,1,0]
         self.today[1].whentodo = [7,1,21]
+    """
     def delete(self,task):
         del self.tasks[task.name]
         self.rbt.delete(key=task.name)
@@ -94,30 +97,69 @@ class Data():
     def __init__(self,all,finished) :
         self.clock_time = 25
         self.alltasks = all
-        self.alltasks.algorithm()
         self.types = ["study","exercise","homework"]
         #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
-        self.today = self.alltasks.today
+        #self.today = self.alltasks.today
         self.cand_color = [[],[],[],[]]
         self.typecolor = {"study":["deep sky blue","light sky blue"],"exercise":["deep pink","pink"],"homework":["green2","palegreen1"]}
         self.finishtasks =finished
-        self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
-        self.schedule[1][0].whentodo = [7,2,10]
-        self.period = {"Monday":[[9,15],[16,20]],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
-    def finished_part(self,task):
-        task_in_all = self.alltasks.tasks[task.name]
-        if task_in_all.duration == task.duration or task_in_all.time_finished + task.duration == task_in_all.duration:
-            self.alltasks.delete(task_in_all)
-            self.finishtasks.add(task)
-            task.finished = True
-        else:
-            task.finished = False
-            task_in_all.time_finished += task.duration
+        #self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
+        #self.schedule[1][0].whentodo = [7,2,10]
+        self.schedule = []
+        self.period = {"Monday":[[9,15],[20,24]],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[[21.5,24]]}
     def finished(self,task):
-        task_in_all = self.alltasks.tasks[task.name]
-        self.alltasks.delete(task_in_all)
-        self.finishtasks.add(task)
-        task.finished = True
+        task_in_all = self.alltasks.tasks[task[0]]
+        if task_in_all.time_finished + task[2] - task[1] >= task_in_all.duration:
+            self.alltasks.delete(task_in_all)
+            self.finishtasks.add(task_in_all)
+        else:
+            task_in_all.time_finished += task[2] - task[1]
+    def add(self,task):
+        self.alltasks.add(task)
+        print(self.alltasks.tasks)
+
+    def scheduling(self):
+        if len(self.alltasks.tasks)>0:
+            days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+            today_weekday = days[datetime.datetime.today().weekday()]
+            now =  datetime.datetime.now()
+            now_hour = now.hour
+            now_minute = now.minute
+            taskslist = list(self.alltasks.tasks.values())
+            today = datetime.datetime.today().date()
+            toalgo_task = []
+            for task in taskslist:
+                deadline = date(2021,task.date[0],task.date[1])
+                remainday = (deadline - today).days
+                new_type_task = DataFormat.task_item(task.name,task.duration-task.time_finished,task.importance,remainday+1,24,1,task.type)
+                toalgo_task.append(new_type_task)
+            toalgo_period = []
+            temp = 0
+            today_period = self.period[today_weekday]
+            period_amount = len(today_period)
+            while temp < period_amount:
+                if today_period[temp][0] > now_hour:
+                    toalgo_period.append(DataFormat.period_item(1,today_period[temp][0],today_period[temp][1]))
+                elif today_period[temp][0]//1 == now_hour:
+                    if today_period[temp][0]%1 == 0.5 and now_minute < 30:
+                        toalgo_period.append(DataFormat.period_item(1,today_period[temp][0],today_period[temp][1]))
+                temp += 1
+            temp = datetime.datetime.today().weekday()
+            for i in range(1,50):
+                index = int((temp+i)%7)
+                for period in self.period[days[index]]:
+                    toalgo_period.append(DataFormat.period_item(i+1,period[0],period[1]))
+            algo = schedule2.schedule_3(toalgo_task,toalgo_period)
+            schedule = algo.Schedule()
+            for s in schedule:
+                s.sort(key = lambda task:task[1])
+            self.schedule = schedule
+            print(self.schedule)
+
+
+
+
+
 
 class main(Tk):
     def __init__(self,data) :
@@ -127,31 +169,29 @@ class main(Tk):
         self.duration = 50
         self.remaintime = self.duration
         self.counting = False
+        self.data = data
         change_frame = Frame(self)
         change_frame.pack(side="left",fill="y")
-        Button(change_frame,text="config",command=lambda:self.switch_frame(StartPage,data)).grid(column=0,row=0,pady=15,padx=15,sticky=N)
-        Button(change_frame,text="tomato clock",command=lambda:self.switch_frame(Tomato,data)).grid(column=0,row=1,pady=15,padx=15,sticky=N)
         Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15,sticky=N)
         Button(change_frame,text="schedule",command=lambda:self.switch_frame(SchedulePage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
         Button(change_frame,text = "set period",command=lambda:self.switch_frame(PeriodPage,data)).grid(column=0,row=4,pady=15,padx=15,sticky=N)
-        Button(change_frame,text="pomodoro",command=lambda:self.switch_frame(application.PomodoroPage,data)).grid(column=0,row=5,pady=15,sticky=N)
+        Button(change_frame,text="pomodoro",command=pomodoro).grid(column=0,row=5,pady=15,sticky=N)
         Button(change_frame,text="notes",command=lambda:self.switch_frame(notes.NotesPage,data)).grid(column=0,row=6,pady=15,sticky=N)
-        self.switch_frame(StartPage,data)
+        Button(change_frame,text="為你安排行程!",command= data.scheduling).grid(column=0,row = 7,pady=15,sticky=N)
+        self.switch_frame(AllTasksPage,data)
     def switch_frame(self, frame_class,data):
         new_frame = frame_class(self,data)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
         self._frame.pack(side = "left",fill = "both")
-    def count_down(self):
-        self.counting = True
-        self.remaintime -= 1
-        if self.remaintime >0:
-            self.after(1000,self.count_down)
-        else:
-            self.remaintime = self.duration
-            self.counting = False
-        pass
+def pomodoro():
+    global pomodoro_frame
+    top = Toplevel()
+    top.title("pomodoro")
+    top.geometry("700x500")
+    pomodoro_frame = application.PomodoroPage(top)
+    pomodoro_frame.pack()
 class StartPage(Frame):
     def __init__(self, master,data):
         Frame.__init__(self, master)
@@ -188,14 +228,17 @@ class VerticalScrolledFrame(Frame):
     * Construct and pack/place/grid normally
     * This frame only allows vertical scrolling
     """
-    def __init__(self, parent,height, *args, **kw):
+    def __init__(self, parent,height,width=None, *args, **kw):
         Frame.__init__(self, parent, *args, **kw)            
         # create a canvas object and a vertical scrollbar for scrolling it
         vscrollbar = Scrollbar(self, orient=VERTICAL)
         vscrollbar.pack(fill=Y, side=RIGHT, expand=FALSE)
         canvas = Canvas(self, bd=0, highlightthickness=0,height=height,
                         yscrollcommand=vscrollbar.set)
+        if width:
+            canvas["width"] = width
         canvas.pack(side=LEFT, fill=BOTH, expand=TRUE)
+        canvas.pack_propagate(0)
         vscrollbar.config(command=canvas.yview)
         # reset the view
         canvas.xview_moveto(0)
@@ -396,7 +439,7 @@ class AllTasksPage(Frame):
             delete_button["bg"] = color
             delete_button.grid(row =0,column=5,padx=10)
             finished_row += 1
-        self.add_task_button = Button(self,text="+",command=self.add_task)
+        self.add_task_button = Button(self,text="add task",command=self.add_task)
         self.add_task_button.grid(row=30,column=0,pady=30)
         Label(self,text="Name").place(x=68,y=40)
         Label(self,text="importance").place(x=170,y=40)
@@ -520,6 +563,9 @@ class FinishButton(Button):
     def finish(self):
         self.data.finished(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
+
+
+
 class Delete_notfinishButton(Button):
     def __init__(self,frame,task,data,grandmaster):
         super().__init__(frame)
@@ -532,6 +578,10 @@ class Delete_notfinishButton(Button):
     def delete(self):
         self.data.alltasks.delete(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
+
+
+
+
 class Delete_finishButton(Button):
     def __init__(self,frame,task,data,grandmaster):
         super().__init__(frame)
@@ -544,6 +594,9 @@ class Delete_finishButton(Button):
     def delete(self):
         self.data.finishtasks.delete(self.task)
         self.grandmaster.switch_frame(AllTasksPage,self.data)
+
+
+
 
 class TaskChangeButton(Button):
     def __init__(self,frame,task,taskrow,task_frame,data):
@@ -639,24 +692,28 @@ class SchedulePage(Frame):
         scheduleframe.pack(side="left")
 class TodayFrame(VerticalScrolledFrame):
     def __init__(self,master,data):
-        VerticalScrolledFrame.__init__(self, master,700)
+        VerticalScrolledFrame.__init__(self, master,700,500)
         self.data = data
         self.master = master
-        self.tasks = sorted(data.today,key= lambda task:task.whentodo)
+        self.tasks = data.schedule[0]
         now = datetime.datetime.now()
         self.now = now
         self.now_hm = [now.hour,now.minute]
         Label(self.interior,text="today:",font=('Helvetica', 20, ITALIC)).pack(side = "top",anchor=W,padx=30)
+        if len(self.tasks) == 0:
+            l = Label(self.interior,text="today has no work",width=50)
+            l.pack_propagate(0)
+            l.pack()
         if len(self.tasks)>0:
-            endtime = self.tasks[0].whentodo[2]
+            endtime = self.tasks[0][1]
             for task in self.tasks:
-                if task.whentodo[2] != endtime:
-                    rest_time = task.whentodo[2] - endtime
+                if task[1] != endtime:
+                    rest_time = task[1] - endtime
                     rest_frame = RestFrame(self.interior,data,rest_time,endtime)
                     rest_frame.pack()
                 task_frame = TaskFrame(self.interior,data,task)
-                task_frame.pack()
-                endtime = task.whentodo[2] + task.duration
+                task_frame.pack(pady=1)
+                endtime =task[2]
 class TaskFrame(Frame):
     def __init__(self,master,data,task):
         Frame.__init__(self,master)
@@ -664,11 +721,11 @@ class TaskFrame(Frame):
         self.master = master
         len_hour = 50
         self.task = task
-        if task.whentodo[2]%1 == 0.5:
+        if task[1]%1 == 0.5:
             starttime_min = 3
         else:
             starttime_min = 0
-        starttime_hour = task.whentodo[2]//1
+        starttime_hour = task[1]//1
         now =  datetime.datetime.now()
         now_hour = now.hour
         now_minute = now.minute
@@ -695,7 +752,7 @@ class TaskFrame(Frame):
                         done = False
                         doing = True
         else: #now_hour > starttime_hour
-            endtime = task.whentodo[2]+task.duration
+            endtime = task[2]
             endtime_hour = endtime//1
             if endtime%1 == 0.5:
                 endtime_min = 30
@@ -715,16 +772,24 @@ class TaskFrame(Frame):
                 done = True
                 doing = False
         if done:
-            color = data.typecolor[task.type][1]
+            if len(task) == 3:
+                color = data.typecolor[data.alltasks.tasks[task[0]].type][1]
+            else:
+                color = task[3]
         else:
-            color = data.typecolor[task.type][0]
+            if len(task) == 3:
+                color = data.typecolor[data.alltasks.tasks[task[0]].type][0]
+            else:
+                color = task[3]
         starttime = "%d:%d0"%(starttime_hour,starttime_min)
         time_frame = Frame(self)
         time_frame.grid(row=0,column=0,sticky=N)
-        Label(time_frame,text=starttime).pack(side="top")
-        task_canvas = Canvas(self,bg = color,width=300,height=task.duration*len_hour)
+        l = Label(time_frame,text=starttime,width=5,height=1)
+        l.pack(side="top")
+        l.pack_propagate(0)
+        task_canvas = Canvas(self,bg = color,width=300,height=(task[2]-task[1])*len_hour)
         task_canvas.grid(row=0,column =1)
-        label_task = Label(task_canvas,text=task.name,bg=color,font=('Helvetica', 22, "bold"),width=20,height=20)
+        label_task = Label(task_canvas,text=task[0],bg=color,font=('Helvetica', 22, "bold"),width=20,height=20)
         label_task.place(anchor="c",relx = .5,rely = .5)
         if doing:
             passtime = ((now_hour*60 + now_minute)-(starttime_hour*60+starttime_min*10))/60
@@ -733,17 +798,37 @@ class TaskFrame(Frame):
             now_label.place(x=10,y=y-10,in_=task_canvas)
             task_canvas.create_line(50,y,400,y,width=3)
         self.var = IntVar
-        check_done = Checkbutton(self,text="finished",command=self.finished,variable=self.var)
-        check_done.grid(row=0,column=2)
+        #check_done = Checkbutton(self,text="finished",command=self.finished,variable=self.var)
+        #check_done.grid(row=0,column=2)
+        if done or task[0] == "a":
+            self.check_done = Checkbutton(self,text="finished",command=self.finished,variable=self.var)
+            self.check_done.grid(row=0,column=2)
+            if len(task) == 4:
+                self.check_done.select()
+                self.check_done.config(state=DISABLED)
+        else:
+            pad_frame = Frame(self,width=71,highlightthickness=5)
+            pad_frame.grid(row = 0,column=2)
+        """
         if self.task.finished :
             check_done.select()
             check_done.config(state=DISABLED)
         else:
             check_done.deselect()
-        self.check_done = check_done
+        """
     def finished(self):
+        color = data.typecolor[data.alltasks.tasks[self.task[0]].type][1]
+        temp = 0
+        for task in self.data.schedule[0]:
+            if task[1] == self.task[1]:
+                n = color
+                task = task + (color,)
+                self.data.schedule[0][temp] = task
+                break
+            temp += 1
         self.check_done.config(state=DISABLED)
         self.data.finished(self.task)
+        self.master.master.master.master.master.switch_frame(SchedulePage,data)
 class RestFrame(Frame):
     def __init__(self,master,data,duration,starttime):
         Frame.__init__(self,master)
@@ -824,16 +909,21 @@ class ScheduleFrame(VerticalScrolledFrame):
         self.data = data
         schedule = self.data.schedule
         Label(self.interior,text="all:",font=('Helvetica', 20, ITALIC)).pack(anchor=W,padx=25)
+        date = datetime.date.today()
+        one_day = datetime.timedelta(days=1)
         for day in schedule:
-            day_frame = DayFrame(self.interior,data,day)
-            day_frame.pack(pady=20)
+            if len(day) > 0:
+                day_frame = DayFrame(self.interior,data,day,date)
+                day_frame.pack(pady=20)
+            date += one_day
+
 class DayFrame(Frame):
-    def __init__(self,master,data,tasks):
+    def __init__(self,master,data,tasks,date):
         Frame.__init__(self,master)
         self.master = master
         self.data = data
         if len(tasks)>0:
-            date = "%d/%d"%(tasks[0].whentodo[0],tasks[0].whentodo[1])
+            date = "%d/%d"%(date.month,date.day)
             date_frame = Frame(self)
             date_frame.grid(row=0,column=0,sticky=N)
             Label(date_frame,text=date,font=('Helvetica', 13, "bold")).pack()
@@ -841,25 +931,29 @@ class DayFrame(Frame):
             tasks_frame.grid(row=0,column=1)
             row = 0
             for task in tasks:
-                starttime = task.whentodo[2]
+                starttime = task[1]
                 start_hour = str(int(starttime//1))
                 if starttime%1 == 0:
                     starttime_minute = "00"
                 else:
                     starttime_minute = "30"
-                endtime = task.whentodo[2] + task.duration
+                endtime = task[2]
                 endtime_hour = str(int(endtime//1))
                 if endtime%1 == 0:
                     endtime_minute = "00"
                 else:
                     endtime_minute = "30"
                 time_label = Label(tasks_frame,text=start_hour+ ":" + starttime_minute + "~" + endtime_hour + ":" + endtime_minute)
-                time_label.grid(row=row,column=0)
-                color = self.data.typecolor[task.type][0]
+                time_label.grid(row=row,column=0,sticky=W)
+                if len(task) == 3:
+                    color = self.data.typecolor[data.alltasks.tasks[task[0]].type][0]
+                else:
+                    color = task[3]
                 task_name_frame = Frame(tasks_frame,bg=color,width=300,height=20)
-                task_name_frame.grid(row = row,column=1)
-                task_label = Label(task_name_frame,text=task.name,bg = color,font = ('Helvetica', 15, "bold"))
-                task_label.place(anchor="c",relx=.5,rely=.5)
+                task_name_frame.grid(row=row,column=1,sticky=W)
+                task_name_frame.grid_propagate(0)
+                task_label = Label(task_name_frame,text=task[0],bg = color,font = ('Helvetica', 15, "bold"))
+                task_label.place(anchor="c",relx = .5,rely = .5)
                 row += 1
 class PeriodPage(Frame):
     def __init__(self,master,data):
@@ -958,6 +1052,7 @@ class PeriodPage(Frame):
             self.data.period[day].append([starttime,endtime])
             self.data.period[day].sort()
 
+
         self.master.switch_frame(PeriodPage,self.data)
 class DeletePeriodButton(Button):
     def __init__(self,master,data,day):
@@ -974,7 +1069,7 @@ class DeletePeriodButton(Button):
 t1 = Task("a",2.5,3,[7,20])
 t2 = Task("b",2,2,[8,30])
 t3 = Task("c",2,2,[7,21])
-all = AllTasks([t1,t2,t3])
+all = AllTasks([])
 f = FinishedTasks([])
 data = Data(all,f)
 """

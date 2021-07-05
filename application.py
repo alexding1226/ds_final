@@ -3,7 +3,7 @@ import tkinter
 from PIL import Image, ImageTk
 
 class PomodoroPage(Frame):
-    def __init__(self,master,data):
+    def __init__(self,master):
         super().__init__(master)
         self.createWidgets()
         self.pack(side=TOP)
@@ -21,9 +21,9 @@ class PomodoroPage(Frame):
         
         self.tomatoImg = PhotoImage(file="2tomato.png")
         # Here need to be revise for the windows xy
-        self.canvas.create_image(145, 114, image=self.tomatoImg)
+        self.canvas.create_image(180, 150, image=self.tomatoImg)
         # Here need to be revise for windows y+11
-        self.timerLabel = self.canvas.create_text(145, 125, text="00:00", fill="white", font=('Arial', 112))
+        self.timerLabel = self.canvas.create_text(180, 150, text="00:00", fill="white", font=('Arial', 112))
         
         self.type = Label(self, text="Work", bg="#ffbc92", fg="sienna", font=('Arial', 40))
         self.type.grid(row=0, column=0, sticky="ewns")
@@ -104,6 +104,7 @@ if __name__ == '__main__':
     # Here need to be revise for the windows size
     root.geometry("700x500")
     root.configure(bg="#ffbc92")
-    app =PomodoroPage(root,None)
+    top = Toplevel()
+    app =PomodoroPage(top)
     app.configure(background="#ffbc92")
     root.mainloop()
