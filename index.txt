@@ -28,7 +28,7 @@ pop(0) : 0.02742, 0.02571,
 pop() : 0.03362, 0.03611
 
 Detect() + Schedule() : k = 30000
-testing data : 3000
+testing data : 30000
 test 1 :
 pop(0) : 10.1918324
 pop()  : 14.4082238

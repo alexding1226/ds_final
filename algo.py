@@ -137,16 +137,16 @@ class schedule_3:
             if len(schedule) < current_date:
                 schedule.append([]) 
                 
-            if self.task_list.Peek().type in current_non_consecutive:
+            if self.task_list.Peek().type in current_non_consecutive: ## 可優化，變成試試看從下一天排起
                 if self.task_list.Swap():
                     t_duration = self.task_list.Peek().duration
                 else:
-                    print("can't skip this, no other task left")
+                    ##print("can't skip this, no other task left")
                     current_non_consecutive = []
 
             if current_period > len(self.period_list):
-                print("task", self.task_list.Peek().name,"expires at day", current_date,"due to delay")
-                print("old schedule current state :",schedule)
+                ##print("task", self.task_list.Peek().name,"expires at day", current_date,"due to delay")
+                ##print("old schedule current state :",schedule)
                 self.flag = self.flag + 1
                 return self.ExpirationHandling(self.task_list.Peek())
 
@@ -156,8 +156,8 @@ class schedule_3:
                 current_time = current_time + t_duration
                 self.period_list[current_period-1].begin = current_time
                 if self.CheckExpire(self.task_list.Peek().deadline_date, self.task_list.Peek().deadline_time, current_date, current_time):
-                    print("task", self.task_list.Peek().name,"expires at day", current_date)
-                    print("old schedule current state :",schedule)
+                    ##print("task", self.task_list.Peek().name,"expires at day", current_date)
+                    ##print("old schedule current state :",schedule)
                     self.flag = self.flag + 1
                     return self.ExpirationHandling(self.task_list.Peek())
                 current_progress = 0
