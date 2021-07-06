@@ -271,7 +271,7 @@ class Data():
             importance = str(task.importance) + "/"
             finishedtime = str(task.time_finished) + "/"
             deadline = str(task.date[0]) + "," + str(task.date[1]) + "\n"
-            t.write(name + duration  + importance + type + finishedtime + deadline)
+            f.write(name + duration  + importance + type + finishedtime + deadline)
         f.close()
 
             
