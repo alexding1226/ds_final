@@ -6,22 +6,22 @@ import DataFormat as data
 # 現在版本 : 先試著不切，照non_consecutive排。if 不行,type豁免。if 再不行，切最後一個，填進去前面的空檔
 # 兩種 items 都會被 modified，所以需要 deepcopy
 
-class schedule_3:
+class schedule:
     
     def __init__(self,data_task_list,data_period_list): 
         self.data_task_list = data_task_list
-        self.data_task_list.sort()
+        ##self.data_task_list.sort()
         self.data_period_list = data_period_list
-        self.data_period_list.sort()
+        ##self.data_period_list.sort()
         
         self.task_list = data.my_list(data_task_list)
         self.period_list = data.my_list([])
         for i in data_period_list:
             self.period_list.append(i.copy())
         
-        self.flag = 0 # 先試忽略type，再試忽略min_length
-        self.task_list.sort()
-        self.period_list.sort()
+        self.flag = 0 
+        ##self.task_list.sort()
+        ##self.period_list.sort()
 
     def Detect(self): # insufficient time detection : # using built-in list
         amount_task = 0
@@ -62,20 +62,20 @@ class schedule_3:
         return True
     
     def ExpirationHandling(self,task_item_with_problem):
-        S_new = schedule_3(self.data_task_list,self.data_period_list)
+        S_new = schedule(self.data_task_list,self.data_period_list)
         index = S_new.task_list.index(task_item_with_problem)
         if self.flag == 1: # type
             S_new.flag = 1
             if index >= 1:
                 S_new.data_task_list[index].type = "special"
-                S_new.task_list[index].type = "special" ## WATCHOUT
+                S_new.task_list[index].type = "special" ## Take Care
                 return S_new.Schedule()
             else :
                 self.flag = self.flag +1
                 ##print("index < 1 @ expiration handling")
                 ##return -1
         
-        if self.flag == 2: # min_length
+        if self.flag == 2: # min_length # for loop 可優化
             S_new.flag = 0
             empty_period = []
             for i in range(len(self.period_list)):
@@ -95,7 +95,7 @@ class schedule_3:
             self.data_task_list.remove(task_item_with_problem)
             t = task_item_with_problem.copy()
             t.min_length = 0
-            t.type = "special2" ################################################################################################
+            t.type = "special2" 
             current_duration_left = t.duration
             for p in empty_period:
                 if current_duration_left != 0:
@@ -113,8 +113,9 @@ class schedule_3:
                         current_duration_left = 0
                 else:
                     break
+            self.data_task_list.sort()
             S_new.task_list = data.my_list(self.data_task_list)
-            S_new.task_list.sort()
+            #S_new.task_list.sort()
             return S_new.Schedule()
 
         else:
@@ -134,19 +135,19 @@ class schedule_3:
 
         while len(self.task_list) != 0:
           
-            if len(schedule) < current_date:
+            while len(schedule) < current_date:
                 schedule.append([]) 
                 
-            if self.task_list.Peek().type in current_non_consecutive:
+            if self.task_list.Peek().type in current_non_consecutive: ## 可優化，變成試試看從下一天排起
                 if self.task_list.Swap():
                     t_duration = self.task_list.Peek().duration
                 else:
-                    print("can't skip this, no other task left")
+                    ##print("can't skip this, no other task left")
                     current_non_consecutive = []
 
             if current_period > len(self.period_list):
-                print("task", self.task_list.Peek().name,"expires at day", current_date,"due to delay")
-                print("old schedule current state :",schedule)
+                ##print("task", self.task_list.Peek().name,"expires at day", current_date,"due to delay")
+                ##print("old schedule current state :",schedule)
                 self.flag = self.flag + 1
                 return self.ExpirationHandling(self.task_list.Peek())
 
@@ -156,8 +157,8 @@ class schedule_3:
                 current_time = current_time + t_duration
                 self.period_list[current_period-1].begin = current_time
                 if self.CheckExpire(self.task_list.Peek().deadline_date, self.task_list.Peek().deadline_time, current_date, current_time):
-                    print("task", self.task_list.Peek().name,"expires at day", current_date)
-                    print("old schedule current state :",schedule)
+                    ##print("task", self.task_list.Peek().name,"expires at day", current_date)
+                    ##print("old schedule current state :",schedule)
                     self.flag = self.flag + 1
                     return self.ExpirationHandling(self.task_list.Peek())
                 current_progress = 0
@@ -184,3 +185,16 @@ class schedule_3:
                 p_duration = self.period_list[current_period-1].end - current_time 
 
         return schedule
+if __name__ == '__main__':
+# name, duration, importance, deadline_date, deadline_time, id
+    p1 = data.period_item(1,18,21)
+    p2 = data.period_item(2,5,10)
+    p3 = data.period_item(5,5,6)
+    p4 = data.period_item(7,5,6)
+    p5 = data.period_item(7,15,17)
+    p6 = data.period_item(8,4,9)
+    p7 = data.period_item(8,18,21)
+    p8 = data.period_item(9,5,10)
+    t1 = data.task_item("a",3.5,1,2,24,1)
+    t2 = data.task_item("b",4,1,4,24,1)
+    s = schedule([t1,t2],[p1,p2,p6])

@@ -1,5 +1,6 @@
 from calendar import month
-from re import T
+from enum import Flag
+from re import T, split
 import time
 import datetime
 from datetime import date
@@ -15,18 +16,17 @@ import random
 import string
 import application
 import notes
-import schedule
+import schedule  as sch
 import DataFormat
 
 class Task():
-    def __init__(self,name,duration,importance,date,type = "工作",successive = False) :
+    def __init__(self,name,duration,importance,date,type = "work",time_finished = 0) :
         self.name = name
         self.duration = duration
         self.importance = importance
         self.type = type
-        self.successive = successive
         self.date = date
-        self.time_finished = 0
+        self.time_finished = time_finished
 class AllTasks():
     def __init__(self,tasks) :
         self.tasks = dict()
@@ -48,16 +48,6 @@ class AllTasks():
         elif type == "duration":
             a = sorted(self.tasks.items(),key = lambda task:task[1].duration ,reverse =  (rev))
             return a
-            """
-        elif type == "name":
-            result = []
-            for task in self.rbt:
-                pass
-            if not rev :
-                result.reverse()
-            return result
-            """
-            
         elif type == "deadline":
             a = sorted(self.tasks.items(),key = lambda task:task[1].date ,reverse = not (rev))
             return a
@@ -98,20 +88,75 @@ class FinishedTasks():
         self.tasks.remove(task)
 class Data():
     def __init__(self,all,finished) :
-        self.clock_time = 25
         self.alltasks = all
-        self.types = ["工作","運動","生活"]
-        #self.today = [self.alltasks.tasks[0],self.alltasks.tasks[1]]
-        #self.today = self.alltasks.today
+        self.types = ["work","exercise","life"]
         self.all_color = [["deep sky blue","light sky blue"],["deep pink","pink"],["green2","palegreen1"],
                             ["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
         self.cand_color = [["yellow","#FFFF99"],["#9966CC","#CC99CC"],["#2376bd","#99c2e4"]]
-        self.typecolor = {"工作":["deep sky blue","light sky blue"],"運動":["deep pink","pink"],"生活":["green2","palegreen1"]}
+        self.typecolor = {"work":["deep sky blue","light sky blue"],"exercise":["deep pink","pink"],"life":["green2","palegreen1"]}
         self.finishtasks =finished
-        #self.schedule = [self.today,[Task("c",2,2,[7,21])],[],[]]
-        #self.schedule[1][0].whentodo = [7,2,10]
         self.schedule = []
-        self.period = {"Monday":[[9,12],[22,23]],"Tuesday":[[10,12],[13,16]],"Wednesday":[[10,12],[13,16]],"Thursday":[[10,12]],"Friday":[],"Saturday":[],"Sunday":[]}
+        self.period = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
+        t = open("data/tasks.txt")
+        tasks = t.read().splitlines()
+        for task in tasks:
+            task_items = task.split("/")
+            name = task_items[0]
+            duration = float(task_items[1])
+            importance = int(task_items[2])
+            type = task_items[3]
+            time_finished = float(task_items[4])
+            date = task_items[5].split(",")
+            date[0] = int(date[0])
+            date[1] = int(date[1])
+            ta = Task(name,duration,importance,date,type,time_finished)
+            self.add(ta)
+        f = open("data/finished_tasks.txt")
+        tasks = f.read().splitlines()
+        for task in tasks:
+            task_items = task.split("/")
+            name = task_items[0]
+            duration = float(task_items[1])
+            importance = int(task_items[2])
+            type = task_items[3]
+            time_finished = float(task_items[4])
+            date = task_items[5].split(",")
+            date[0] = int(date[0])
+            date[1] = int(date[1])
+            ta = Task(name,duration,importance,date,type,time_finished)
+            self.finishtasks.add(ta)
+        ty = open("data/type.txt")
+        types = ty.read().splitlines()
+        for type in types:
+            type_items = type.split("/")
+            self.types.append(type_items[0])
+            self.typecolor[type_items[0]] = [type_items[1],type_items[2]]
+        p = open("data/period.txt")
+        days = p.read().splitlines()
+        for day in days:
+            day_items = day.split("/")
+            day_items.pop()
+            day_name = day_items[0]
+            for day_period in day_items[1:]:
+                day_period = day_period.split(",")
+                day_period[0] = float(day_period[0])
+                day_period[1] = float(day_period[1])
+                self.period[day_name].append(day_period)
+        s = open("data/schedule.txt")
+        days = s.read().splitlines()
+        for day in days:
+            day_result = []
+            periods = day.split("/")
+            periods.pop()
+            for period in periods:
+                period_items = period.split(",")
+                period_items.pop()
+                period_items[1] = float(period_items[1])
+                period_items[2] = float(period_items[2])
+                period_items = tuple(period_items)
+                day_result.append(period_items)
+            self.schedule.append(day_result)
+        
     def finished(self,task):
         self.alltasks.delete(task)
         self.finishtasks.add(task)
@@ -130,10 +175,8 @@ class Data():
             days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
             today_weekday = days[datetime.datetime.today().weekday()]
             now =  datetime.datetime.now()
-            #now_hour = now.hour
-            #now_minute = now.minute
-            now_hour = 8
-            now_minute = 0
+            now_hour = now.hour
+            now_minute = now.minute
             taskslist = list(self.alltasks.tasks.values())
             today = datetime.datetime.today().date()
             toalgo_task = []
@@ -154,11 +197,11 @@ class Data():
                         toalgo_period.append(DataFormat.period_item(1,today_period[temp][0],today_period[temp][1]))
                 temp += 1
             temp = datetime.datetime.today().weekday()
-            for i in range(1,50):
+            for i in range(1,10):
                 index = int((temp+i)%7)
                 for period in self.period[days[index]]:
                     toalgo_period.append(DataFormat.period_item(i+1,period[0],period[1]))
-            algo = schedule2.schedule_3(toalgo_task,toalgo_period)
+            algo =sch.schedule(toalgo_task,toalgo_period)
             if algo.Detect() == 0:
                 schedule = algo.Schedule()
                 for s in schedule:
@@ -175,6 +218,64 @@ class Data():
         self.typecolor[type] = type_color
         if len(self.cand_color) == 0:
             self.cand_color = self.all_color
+    def save(self):
+        type = open("data/type.txt","w")
+        for key,value in self.typecolor.items():
+            if key == "work" or key == "exercise" or key == "life":
+                pass
+            else:
+                type.write(key + "/")
+                type.write(value[0] + "/")
+                type.write(value[1]  + "\n")
+        type.close()
+        t = open("data/tasks.txt","w")
+        for task in self.alltasks.tasks.values():
+            name = task.name + "/"
+            duration = str(task.duration) + "/"
+            type = task.type + "/"
+            importance = str(task.importance) + "/"
+            finishedtime = str(task.time_finished) + "/"
+            deadline = str(task.date[0]) + "," + str(task.date[1]) + "\n"
+            t.write(name + duration  + importance + type + finishedtime + deadline)
+        t.close()
+        p = open("data/period.txt","w")
+        for day,periods in self.period.items():
+            p.write(day + "/")
+            for period in periods:
+                p.write(str(period[0]) + "," + str(period[1]) + "/")
+            p.write("\n")
+        p.close()
+        s = open("data/schedule.txt","w")
+        if len(self.schedule)>0:
+            if self.schedule == ["no task"]:
+                s.write("no task")
+            elif self.schedule[0] == "expire":
+                s.write("expire/" + str(self.schedule[1]))
+            else:
+                for day in self.schedule:
+                    for period in day:
+                        for item in period:
+                            item = str(item)
+                            s.write(item + ",")
+                        s.write("/")
+                    s.write("\n")
+        else:
+            for a in self.schedule:
+                s.write(a)
+        s.close()
+        f = open("data/finished_tasks.txt","w")
+        for task in self.finishtasks.tasks:
+            name = task.name + "/"
+            duration = str(task.duration) + "/"
+            type = task.type + "/"
+            importance = str(task.importance) + "/"
+            finishedtime = str(task.time_finished) + "/"
+            deadline = str(task.date[0]) + "," + str(task.date[1]) + "\n"
+            t.write(name + duration  + importance + type + finishedtime + deadline)
+        f.close()
+
+            
+
 
 
 
@@ -190,6 +291,7 @@ class main(Tk):
         self.data = data
         change_frame = Frame(self)
         change_frame.pack(side="left",fill="y")
+        self.protocol("WM_DELETE_WINDOW",self.save)
         Button(change_frame,text="all tasks",command=lambda:self.switch_frame(AllTasksPage,data)).grid(column=0,row=2,pady=15,padx=15,sticky=N)
         Button(change_frame,text="schedule",command=lambda:self.switch_frame(SchedulePage,data)).grid(column=0,row=3,pady=15,padx=15,sticky=N)
         Button(change_frame,text = "set period",command=lambda:self.switch_frame(PeriodPage,data)).grid(column=0,row=4,pady=15,padx=15,sticky=N)
@@ -214,6 +316,10 @@ class main(Tk):
             messagebox.showwarning("expire","task expire at day %d/%d"%(expiredate[0],expiredate[1]))
         elif self.data.schedule[0] == "no task":
             messagebox.showinfo("no task","add a task first")
+    def save(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.data.save()
+            self.destroy()
 def pomodoro():
     global pomodoro_frame
     top = Toplevel()
@@ -705,8 +811,7 @@ class TodayFrame(VerticalScrolledFrame):
         self.tasks = data.schedule[0]
         now = datetime.datetime.now()
         self.now = now
-        #self.now_hm = [now.hour,now.minute]
-        self.now_hm = [13,0]
+        self.now_hm = [now.hour,now.minute]
         Label(self.interior,text="today:",font=('Helvetica', 20, ITALIC)).pack(side = "top",anchor=W,padx=30)
         if len(self.tasks) == 0:
             l = Label(self.interior,text="today has no work",width=50)
@@ -735,10 +840,8 @@ class TaskFrame(Frame):
             starttime_min = 0
         starttime_hour = task[1]//1
         now =  datetime.datetime.now()
-        #now_hour = now.hour
-        #now_minute = now.minute
-        now_hour = 13
-        now_minute = 0
+        now_hour = now.hour
+        now_minute = now.minute
         if now_hour < starttime_hour:
             done = False
             doing = False
@@ -850,10 +953,8 @@ class RestFrame(Frame):
             starttime_min = 0
         starttime_hour = starttime // 1
         now =  datetime.datetime.now()
-        #now_hour = now.hour
-        #now_minute = now.minute
-        now_hour = 13
-        now_minute = 0
+        now_hour = now.hour
+        now_minute = now.minute
         if now_hour < starttime_hour:
             done = False
             doing = False

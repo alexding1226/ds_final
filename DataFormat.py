@@ -1,7 +1,7 @@
 from typing import List
 
 class task_item:
-    def __init__(self, name, duration, importance, deadline_date, deadline_time, min_length = 1,
+    def __init__(self, name, duration, importance, deadline_date, deadline_time, id, min_length = 1,
             type = "None", non_consecutive_type = []) :
         self.name = name # str
         self.duration = duration # int, every 30 min or 10 min 
@@ -11,10 +11,11 @@ class task_item:
         self.type = type # str
         self.min_length = min_length # int, every 30 min or 10 min 
         self.non_consecutive_type = non_consecutive_type # list of types that can't take place right after this task
-        #self.partition_num = [1,duration//min_length]
-        #self.partition = [duration]
-        #for i in range():
-        #    self.partition.append(min_length)
+        self.id = id # to identify tasks with same properties (e.g. splitted tasks)
+        ##self.partition_num = [1,duration//min_length]
+        ##self.partition = [duration]
+        ##for i in range():
+        ##    self.partition.append(min_length)
 
     def copy(self):
         copy = task_item(self.name,self.duration, self.importance, self.deadline_date, self.deadline_time,
@@ -28,7 +29,8 @@ class task_item:
             return False
 
     def __eq__(self, other: object) -> bool:
-        if (self.deadline_date, self.deadline_time, self.importance) == (other.deadline_date, other.deadline_time, other.importance):
+        if (self.deadline_date, self.deadline_time, self.importance, self.name, self.id) == \
+                (other.deadline_date, other.deadline_time, other.importance, other.name, other.id):
             return True
         else:
             return False
@@ -90,47 +92,6 @@ class period_item:
             return True
         else:
             return False
-
-'''
-class list: ##原本在用的，可以廢掉了
-    def __init__(self, list_of_tasks):
-        self.list = list_of_tasks
-    
-    def add(self, task_item):
-        self.list.append(task_item)
-    
-    def delete(self, task_item):
-        self.list.remove(task_item)
-    def sort(self, type = "deadline", rev = True):
-        if type == "deadline":
-            self.list = sorted(self.list,key= lambda task_item:(task_item.deadline_date, task_item.deadline_time,
-                task_item.importance), reverse = not (rev))
-        elif type == "time":
-            self.list = sorted(self.list,key= lambda period_item:(period_item.date, period_item.begin), reverse = not (rev))
-        return self.list
-    
-    def pop(self,index):
-        self.list.pop(index)
-    def RemoveMin(self):
-        self.list.pop(0)
-    def Swap(self):
-        if len(self.list) > 1:
-            temp = self.list[0]
-            self.list[0] = self.list[1] 
-            self.list[1] = temp
-            return True
-        return False
-    
-    def Peek(self):
-        return self.list[0]
-    def len(self):
-        return len(self.list)
-    def index(self,task_item):
-        return self.list.index(task_item)
-    
-    def get(self,index):
-        return self.list[index]
-'''
 
 class my_list(List): 
     def __init__(self, list_item):
