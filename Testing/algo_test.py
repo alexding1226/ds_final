@@ -140,7 +140,7 @@ class schedule:
 
         while len(self.task_list) != 0:
           
-            if len(schedule) < current_date:
+            while len(schedule) < current_date:
                 schedule.append([]) 
                 
             if self.task_list.Peek(reverse=True).type in current_non_consecutive: ## 可優化，變成試試看從下一天排起
