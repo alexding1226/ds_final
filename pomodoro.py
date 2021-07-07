@@ -98,6 +98,8 @@ class Application(Frame):
             self.resetTime()
             self.startTime()
 
+            
+# refer to https://github.com/portoduque/Pomodoro-Timer
 if __name__ == '__main__':
     root = Tk()
     root.title("Pomodoro Timer")
