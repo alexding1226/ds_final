@@ -48,7 +48,7 @@ class NotesPage(Frame):
         self.tasks.remove(doneButton.master)
 
 
-
+# refer to https://codingshiksha.com/python/python-3-tkinter-add-todo-items-list-widget-dynamically-using-entry-text-input-example-in-gui-desktop-app-full-project-for-beginners/
 if __name__ == "__main__":
 
     root = Tk()
