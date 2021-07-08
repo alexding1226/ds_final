@@ -148,7 +148,10 @@ class Data():
             day_result = []
             periods = day.split("/")
             periods.pop()
-            for period in periods:
+            date = periods[0].split(",")
+            date = [int(date[0]),int(date[1])]
+            day_result.append(date)
+            for period in periods[1:]:
                 period_items = period.split(",")
                 period_items.pop()
                 period_items[1] = float(period_items[1])
@@ -156,6 +159,14 @@ class Data():
                 period_items = tuple(period_items)
                 day_result.append(period_items)
             self.schedule.append(day_result)
+        self.update_schedule()
+    def update_schedule(self):
+        today = datetime.datetime.today()
+        today_monthday = [today.month,today.day]
+        if len(self.schedule) >0:
+            print(self.schedule)
+            while self.schedule[0][0] != today_monthday:
+                self.schedule.pop(0)
         
     def finished(self,task):
         self.alltasks.delete(task)
@@ -206,6 +217,12 @@ class Data():
                 schedule = algo.Schedule()
                 for s in schedule:
                     s.sort(key = lambda task:task[1])
+                date_for_schedule = datetime.datetime.today().date()
+                one_day = datetime.timedelta(days=1)
+                for day in schedule:
+                    monthday = [date_for_schedule.month,date_for_schedule.day]
+                    day.insert(0,monthday)
+                    date_for_schedule += one_day
                 self.schedule = schedule
             else:
                 self.schedule = ["expire",algo.Detect()]
@@ -275,9 +292,6 @@ class Data():
         f.close()
 
             
-
-
-
 
 
 
@@ -808,7 +822,7 @@ class TodayFrame(VerticalScrolledFrame):
         VerticalScrolledFrame.__init__(self, master,700,500)
         self.data = data
         self.master = master
-        self.tasks = data.schedule[0]
+        self.tasks = data.schedule[0][1:]
         now = datetime.datetime.now()
         self.now = now
         self.now_hm = [now.hour,now.minute]
@@ -932,10 +946,10 @@ class TaskFrame(Frame):
     def finished(self):
         color = data.typecolor[data.alltasks.tasks[self.task[0]].type][1]
         temp = 0
-        for task in self.data.schedule[0]:
+        for task in self.data.schedule[0][1:]:
             if task[1] == self.task[1]:
                 task = task + (color,)
-                self.data.schedule[0][temp] = task
+                self.data.schedule[0][temp+1] = task
                 break
             temp += 1
         self.check_done.config(state=DISABLED)
@@ -1025,7 +1039,7 @@ class ScheduleFrame(VerticalScrolledFrame):
         one_day = datetime.timedelta(days=1)
         for day in schedule:
             if len(day) > 0:
-                day_frame = DayFrame(self.interior,data,day,date)
+                day_frame = DayFrame(self.interior,data,day[1:],date)
                 day_frame.pack(pady=20)
             date += one_day
 
